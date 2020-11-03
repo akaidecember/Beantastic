@@ -99,9 +99,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     protected void setupScene(Engine eng, SceneManager sm) throws IOException {
     	
     	im = new GenericInputManager();																				//Initializing the input manager
-    	
-        setupInputs(sm);																								//Calling the function to setup the inputs
-
+    	getInput();																									//Determine the type of input device
         gameWorldObjectsNode = sm.getRootSceneNode().createChildSceneNode("GameWorldObjectsNode");			        //Initializing the gameWorldObjects Scene Node
         
 		
@@ -132,15 +130,28 @@ public class BeantasticGame extends VariableFrameRateGame {
         StretchController sc = new StretchController();
         sc.addNode(playerNode);
         sm.addController(sc);
+        
+        setupInputs(sm);																								//Calling the function to setup the inputs
+
        
     }
 
 
-	//Function to setup inputs for various actions
-    protected void setupInputs(SceneManager sm){ 
-
+	private void getInput() {
+		// TODO Auto-generated method stub
     	ArrayList<Controller> controllers = im.getControllers();						//Get the list of all the input devices available
     	
+        //Error checking to check if the controllers are connected or not (ensuring the game does not crash)
+        for (Controller c : controllers) 
+        	inputName = c.getName();
+        
+	}
+
+	//Function to setup inputs for various actions
+    protected void setupInputs(SceneManager sm){
+    	
+    	ArrayList<Controller> controllers = im.getControllers();						//Get the list of all the input devices available
+
     	//Initialization action keyboard
     	moveCameraAction = new MoveCameraAction(this);
     	moveDirectionAction = new MoveDirectionAction(playerNode, this);
@@ -157,7 +168,6 @@ public class BeantasticGame extends VariableFrameRateGame {
         //Error checking to check if the controllers are connected or not (ensuring the game does not crash)
         for (Controller c : controllers) {
         	
-        	inputName = c.getName();
         	//If the controller type is keyboard, then use the keyboard controls, otherwise use the gamepad controls
             if (c.getType() == Controller.Type.KEYBOARD)
                 keyboardControls(c);													//Call the keyboard Control function to handle the keyboard inputs
