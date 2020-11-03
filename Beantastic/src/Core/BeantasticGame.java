@@ -109,7 +109,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 		playerObjectNode = gameWorldObjectsNode.createChildSceneNode("PlayerNode");
 		
         //Creating a player
-        Entity playerEntity = sm.createEntity("myPlayer", "dolphinHighPoly.obj");
+        Entity playerEntity = sm.createEntity("myPlayer", "bean.obj");
         playerEntity.setPrimitive(Primitive.TRIANGLES);
         playerNode = playerObjectNode.createChildSceneNode(playerEntity.getName() + "Node");
         playerNode.attachObject(playerEntity);
