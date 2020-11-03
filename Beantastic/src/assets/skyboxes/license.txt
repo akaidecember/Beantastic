@@ -1,0 +1,4 @@
+Source  : http://opengameart.org/content/xonotic-skyboxes
+License : GPLv2 or later (see comments)
+Accessed: October 7, 2016
+Notes   : The files have been renamed and rotated. No additional changes have been made.
