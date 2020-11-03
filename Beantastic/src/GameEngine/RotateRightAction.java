@@ -24,7 +24,7 @@ public class RotateRightAction extends AbstractInputAction {
 	public void performAction(float arg0, Event arg1) {
 		
 		Angle degree = Degreef.createFrom(-5.0f);
-		player.yaw(degree);
+		game.cameraNode.yaw(degree);
 		game.setCameraAzimuthAngle(game.getCameraAzimuthAngle() - 5.0f);
 		
 	}
