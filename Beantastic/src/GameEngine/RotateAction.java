@@ -21,7 +21,7 @@ public class RotateAction extends AbstractInputAction {
 	@Override
 	public void performAction(float arg0, Event e) {
 		
-		SceneNode player = game.getEngine().getSceneManager().getSceneNode("myDolphinTopNode");
+		SceneNode player = game.getEngine().getSceneManager().getSceneNode("myPlayerNode");
 		
 		if (e.getValue() < -0.7) {
 			

@@ -2,6 +2,7 @@ package Core;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.AffineTransform;
 import java.io.*;
 import java.nio.*;
 import java.util.*;
@@ -39,11 +40,14 @@ public class BeantasticGame extends VariableFrameRateGame {
     private Action moveForwardAction, moveBackwardAction, moveLeftAction, moveRightAction, moveCameraAction, moveDirectionAction, moveUpDownAction, rotateAction, rotatePlayerLeftAction, rotatePlayerRightAction;
     private SceneNode cameraNode, gameWorldObjectsNode, playerObjectNode;
     private Camera3pController playerController;	
+    private static final String SKYBOX_NAME = "SkyBox";
+    private boolean skyBoxVisible = true;
     
     //Public variables for the class BeantasticGame------------------------------------------------------------------------
     public Camera camera;
     public SceneNode playerNode;										
    
+    
     //Constructor for the class BeantasticGame
     public BeantasticGame() {
     	
@@ -130,6 +134,38 @@ public class BeantasticGame extends VariableFrameRateGame {
         StretchController sc = new StretchController();
         sc.addNode(playerNode);
         sm.addController(sc);
+        
+     // set up sky box        
+        Configuration conf = eng.getConfiguration();        
+        TextureManager tm = getEngine().getTextureManager();        
+        tm.setBaseDirectoryPath(conf.valueOf("assets.skyboxes.path"));        
+        Texture front = tm.getAssetByPath("front.jpeg");        
+        Texture back = tm.getAssetByPath("back.jpeg");        
+        Texture left = tm.getAssetByPath("left.jpeg");        
+        Texture right = tm.getAssetByPath("right.jpeg");        
+        Texture top = tm.getAssetByPath("top.jpeg");        
+        Texture bottom = tm.getAssetByPath("bottom.jpeg");        
+        tm.setBaseDirectoryPath(conf.valueOf("assets.textures.path"));        
+        // cubemap textures are flipped upside-down.        
+        // All textures must have the same dimensions, so any image’s        
+        //   heights will work since they are all the same height        
+        AffineTransform xform = new AffineTransform();        
+        xform.translate(0, front.getImage().getHeight());        
+        xform.scale(1d, -1d);        
+        front.transform(xform);        
+        back.transform(xform);        
+        left.transform(xform);        
+        right.transform(xform);        
+        top.transform(xform);        
+        bottom.transform(xform);        
+        SkyBox sb = sm.createSkyBox(SKYBOX_NAME);        
+        sb.setTexture(front, SkyBox.Face.FRONT);        
+        sb.setTexture(back, SkyBox.Face.BACK);       
+        sb.setTexture(left, SkyBox.Face.LEFT);        
+        sb.setTexture(right, SkyBox.Face.RIGHT);        
+        sb.setTexture(top, SkyBox.Face.TOP);        
+        sb.setTexture(bottom, SkyBox.Face.BOTTOM);        
+        sm.setActiveSkyBox(sb);
         
         setupInputs(sm);																								//Calling the function to setup the inputs
 
