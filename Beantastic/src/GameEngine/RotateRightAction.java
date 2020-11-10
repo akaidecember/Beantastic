@@ -3,30 +3,24 @@ package GameEngine;
 import Core.BeantasticGame;
 import net.java.games.input.Event;
 import ray.input.action.AbstractInputAction;
-import ray.rage.scene.Node;
+import ray.rage.scene.Camera;
 import ray.rage.scene.SceneNode;
 import ray.rml.Angle;
 import ray.rml.Degreef;
+import ray.rml.Vector3;
+import ray.rml.Vector3f;
 
 public class RotateRightAction extends AbstractInputAction {
-	
-	private BeantasticGame game;
-	private Node player;
+	private SceneNode dN;
+	private Camera camera;
+	public RotateRightAction(SceneNode dolphinN, Camera c) {
+		dN = dolphinN;
+		camera = c;
 
-	public RotateRightAction(Node newNode, BeantasticGame g) {
-		
-		player = newNode;
-		game = g;
-		
 	}
-
 	@Override
-	public void performAction(float arg0, Event arg1) {
-		
-		Angle degree = Degreef.createFrom(-5.0f);
-		game.cameraNode.yaw(degree);
-		game.setCameraAzimuthAngle(game.getCameraAzimuthAngle() - 5.0f);
-		
+	public void performAction(float a, Event e) {
+		Angle rotAmt = Degreef.createFrom(-5.0f);
+		dN.yaw(rotAmt);
 	}
-	
 }
