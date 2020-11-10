@@ -134,19 +134,25 @@ public class BeantasticGame extends VariableFrameRateGame {
     	camera.getFrustum().setFarClipDistance(1000.0f);
     	
     }
+    
+    //Function to setup the orbit cameras
 	private void setupOrbitCameras(Engine eng, SceneManager sm) {
 		
 		String msName = im.getMouseName();
 		playerController = new Camera3pController(camera, cameraNode, playerNode, msName, im, this);
 		
 	}
+	
+	//Function to setup the scene of the game
     @Override
     protected void setupScene(Engine eng, SceneManager sm) throws IOException {
     	
     	im = new GenericInputManager();		
     	setupNetworking();
+    	
     	//Initializing the input manager
     	getInput();																									//Determine the type of input device
+    	
         gameWorldObjectsNode = sm.getRootSceneNode().createChildSceneNode("GameWorldObjectsNode");			        //Initializing the gameWorldObjects Scene Node
         manualObjectsNode = gameWorldObjectsNode.createChildSceneNode("ManualObjectsNode");							//Initializing the manualObjects scene node 
         
@@ -251,6 +257,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     //Function to get the type of controller for the game
 	private void getInput() {
 		// TODO Auto-generated method stub
+		
     	ArrayList<Controller> controllers = im.getControllers();						//Get the list of all the input devices available
     	
         //Error checking to check if the controllers are connected or not (ensuring the game does not crash)
@@ -291,7 +298,7 @@ public class BeantasticGame extends VariableFrameRateGame {
         for (Controller c : controllers) {
         	
         	//If the controller type is keyboard, then use the keyboard controls, otherwise use the gamepad controls
-            if (c.getType() == Controller.Type.KEYBOARD)
+            if (c.getType() == Controller.Type.KEYBOARD)  
                 keyboardControls(c);													//Call the keyboard Control function to handle the keyboard inputs
             else if (c.getType() == Controller.Type.GAMEPAD || c.getType() == Controller.Type.STICK)
                 gamepadControls(c);														//Call the gamepad input to control the XB1 inputs
@@ -314,12 +321,12 @@ public class BeantasticGame extends VariableFrameRateGame {
     //Function to handle the keyboard controls
     void keyboardControls(Controller kbName) {
    
-        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.D, moveLeftAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.A, moveRightAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        //im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.D, moveLeftAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        //im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.A, moveRightAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.W, moveForwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.S, moveBackwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.Q, rotateLeftA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.E, rotateRightA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.A, rotateLeftA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.D, rotateRightA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         
     }
     
@@ -503,13 +510,12 @@ public class BeantasticGame extends VariableFrameRateGame {
 		elapsTime += engine.getElapsedTimeMillis();
 		elapsTimeSec = Math.round(elapsTime/1000.0f);
 		elapsTimeStr = Integer.toString(elapsTimeSec);
-		//hud = "Time = " + elapsTimeStr ;
-		//rs.setHUD(hud, 15, 15);
-		im.update(elapsTime);	
+		hud = "Time = " + elapsTimeStr ;
+		rs.setHUD(hud, 15, 15);
+		//im.update(elapsTime);	
 		playerController.updateCameraPosition();
 		processNetworking(elapsTime);
-		
-		//im.update(elapsTime);																			//Error here, don't forget to include
+		im.update(elapsTime);																			
 		
 	}
     
