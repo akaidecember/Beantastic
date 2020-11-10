@@ -49,7 +49,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     //Private variables for the class BeantasticGame-----------------------------------------------------------------------------------------------------------------
     private InputManager im;
     private SceneManager sm;
-    private Action moveForwardAction, moveBackwardAction, moveDirectionAction, moveLeftAction, moveRightAction, rotateCameraLeftAction, rotateCameraRightAction, moveUpDownAction, rotateRightA, rotateLeftA, colorA, rotateAction, rotatePlayerAction;
+    private Action moveForwardAction, moveBackwardAction, moveDirectionAction, moveLeftAction, moveRightAction, rotateCameraLeftAction, rotateCameraRightAction, moveUpDownAction, rotateRightA, rotateLeftA, colorA, rotateAction, rotatePlayerAction, quitAction;
     public SceneNode cameraNode;
 	private SceneNode gameWorldObjectsNode;
 	private SceneNode playerObjectNode, manualObjectsNode;
@@ -57,7 +57,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     private static final String SKYBOX_NAME = "SkyBox";
     private boolean skyBoxVisible = true;
     
-	//server variables---
+	//server variables----
 	private String serverAddress;
 	private int serverPort;
 	private ProtocolType serverProtocol;
@@ -149,22 +149,18 @@ public class BeantasticGame extends VariableFrameRateGame {
     	
     	im = new GenericInputManager();		
     	setupNetworking();
-    	
-    	//Initializing the input manager
     	getInput();																									//Determine the type of input device
     	
         gameWorldObjectsNode = sm.getRootSceneNode().createChildSceneNode("GameWorldObjectsNode");			        //Initializing the gameWorldObjects Scene Node
         manualObjectsNode = gameWorldObjectsNode.createChildSceneNode("ManualObjectsNode");							//Initializing the manualObjects scene node 
         
-		//Creating the player node to add in the game, upgrade from last only entity approach
 		playerObjectNode = gameWorldObjectsNode.createChildSceneNode("PlayerNode");
-		
-        //Creating a player
+        //Creating a player----
         Entity playerEntity = sm.createEntity("myPlayer", "dolphinHighPoly.obj");
         playerEntity.setPrimitive(Primitive.TRIANGLES);
         playerNode = playerObjectNode.createChildSceneNode(playerEntity.getName() + "Node");
         playerNode.attachObject(playerEntity);
-        //player texture
+        //player texture--
         TextureManager tmd1 = eng.getTextureManager();
         Texture assetd1 = tmd1.getAssetByPath("Dolphin_HighPolyUV.png");
         RenderSystem rsd1 = sm.getRenderSystem();
@@ -173,7 +169,7 @@ public class BeantasticGame extends VariableFrameRateGame {
         playerEntity.setRenderState(stated1);
         playerNode.yaw(Degreef.createFrom(180.0f));
         
-        // Set up Lights
+        // Set up Lights----
         sm.getAmbientLight().setIntensity(new Color(.3f, .3f, .3f));
 		Light plight = sm.createLight("testLamp1", Light.Type.POINT);
 		plight.setAmbient(new Color(.1f, .1f, .1f));
@@ -184,7 +180,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 		SceneNode plightNode = sm.getRootSceneNode().createChildSceneNode("plightNode");
         plightNode.attachObject(plight);
         
-        //Setting up sky box   
+        //Setting up sky box----
         Configuration conf = eng.getConfiguration();
 		TextureManager tm= getEngine().getTextureManager();
 		tm.setBaseDirectoryPath(conf.valueOf("assets.skyboxes.path"));
@@ -195,18 +191,18 @@ public class BeantasticGame extends VariableFrameRateGame {
 		Texture top = tm.getAssetByPath("top.jpeg");
 		Texture bottom = tm.getAssetByPath("bottom.jpeg");
 		tm.setBaseDirectoryPath(conf.valueOf("assets.textures.path"));
-		
+		//Setup transformation--
 		AffineTransform xform = new AffineTransform();        
 		xform.translate(0, front.getImage().getHeight());       
 		xform.scale(1d, -1d);
-		
+		//Apply the transform--
 		front.transform(xform);
 		back.transform(xform);
 		left.transform(xform);
 		right.transform(xform);
 		top.transform(xform);
 		bottom.transform(xform);
-
+		//setting the texture for skybox
 		SkyBox sb = sm.createSkyBox(SKYBOX_NAME);        
 		sb.setTexture(front, SkyBox.Face.FRONT);        
 		sb.setTexture(back, SkyBox.Face.BACK);        
@@ -216,13 +212,12 @@ public class BeantasticGame extends VariableFrameRateGame {
 		sb.setTexture(bottom, SkyBox.Face.BOTTOM);        
 		sm.setActiveSkyBox(sb);
 		
-		//Terrain
+		//Terrain----
 		Tessellation tessE = sm.createTessellation("tessE", 6);
 		tessE.setSubdivisions(8f);
 		SceneNode tessN = (SceneNode) sm.getRootSceneNode().createChildNode("TessN");
-		tessN.attachObject(tessE);
-				
-		tessN.scale(10, 20, 10);
+		tessN.attachObject(tessE);	
+		tessN.scale(100, 20, 100);
 		tessN.setLocalPosition(-1, -1, -5);
 		tessE.setHeightMap(this.getEngine(), "moon.jpeg");
 		tessE.setTexture(this.getEngine(), "blue.jpeg");
@@ -235,13 +230,8 @@ public class BeantasticGame extends VariableFrameRateGame {
 		
 		//pressing SPACE light CHANGES TEST
 		scriptFile = new File("UpdateLightColor.js");
-		
 		this.runScript(scriptFile);
-		im = new GenericInputManager();
-		String kbName = im.getKeyboardName();
-		//colorAction = new ColorAction(sm);
-		
-		
+
 		setupOrbitCameras(eng,sm);
         setupInputs(sm);																								//Calling the function to setup the inputs
 
@@ -258,7 +248,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 	private void getInput() {
 		// TODO Auto-generated method stub
 		
-    	ArrayList<Controller> controllers = im.getControllers();						//Get the list of all the input devices available
+    	ArrayList<Controller> controllers = im.getControllers();											//Get the list of all the input devices available
     	
         //Error checking to check if the controllers are connected or not (ensuring the game does not crash)
         for (Controller c : controllers) 
@@ -269,12 +259,12 @@ public class BeantasticGame extends VariableFrameRateGame {
 	//Function to setup inputs for various actions
     protected void setupInputs(SceneManager sm){
     	
-    	ArrayList<Controller> controllers = im.getControllers();						//Get the list of all the input devices available
+    	ArrayList<Controller> controllers = im.getControllers();											//Get the list of all the input devices available
     	
     	//Initialization actions
-    	moveForwardAction = new MoveForwardAction(playerNode, protClient);				//camera forward
-        moveBackwardAction = new MoveBackwardAction(playerNode);						//camera backward
-        moveLeftAction = new MoveLeftAction(playerNode);								//camera left
+    	moveForwardAction = new MoveForwardAction(playerNode, protClient);									//camera forward
+        moveBackwardAction = new MoveBackwardAction(playerNode);											//camera backward
+        moveLeftAction = new MoveLeftAction(playerNode);													//camera left
         moveRightAction = new MoveRightAction(playerNode);	
         rotateRightA = new RotateRightAction(playerNode, camera);
         rotateLeftA = new RotateLeftAction(playerNode, camera);
@@ -282,17 +272,18 @@ public class BeantasticGame extends VariableFrameRateGame {
         moveDirectionAction = new MoveDirectionAction(playerNode, this);
         moveUpDownAction = new MoveUpDownAction(playerNode, this);
         rotatePlayerAction = new RotatePlayerAction(playerNode);
-        rotateCameraLeftAction = new RotateLeftKbAction(this);				   	 		//Rotate the player left
-        rotateCameraRightAction = new RotateRightKbAction(this);						//Rotate the player right
+        rotateCameraLeftAction = new RotateLeftKbAction(this);				   	 							//Rotate the player left
+        rotateCameraRightAction = new RotateRightKbAction(this);											//Rotate the player right
+        quitAction = new QuitGameAction(this);																//Quit the game
         
         //Error checking to check if the controllers are connected or not (ensuring the game does not crash)
         for (Controller c : controllers) {
         	
         	//If the controller type is keyboard, then use the keyboard controls, otherwise use the gamepad controls
             if (c.getType() == Controller.Type.KEYBOARD)  
-                keyboardControls(c);													//Call the keyboard Control function to handle the keyboard inputs
+                keyboardControls(c);																		//Call the keyboard Control function to handle the keyboard inputs
             else if (c.getType() == Controller.Type.GAMEPAD || c.getType() == Controller.Type.STICK)
-                gamepadControls(c);														//Call the gamepad input to control the XB1 inputs
+                gamepadControls(c);																			//Call the gamepad input to control the XB1 inputs
             
         }
         
@@ -305,6 +296,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.Y, moveUpDownAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN); 
     	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.RX, rotateAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
     	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.RY, rotateAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+    	im.associateAction(gpName, net.java.games.input.Component.Identifier.Key._8, quitAction, InputManager.INPUT_ACTION_TYPE.ON_PRESS_ONLY);
 
     }
 
@@ -317,6 +309,7 @@ public class BeantasticGame extends VariableFrameRateGame {
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.D, rotateRightA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.LEFT, rotateCameraLeftAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.RIGHT, rotateCameraRightAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);     
+        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.Q, quitAction, InputManager.INPUT_ACTION_TYPE.ON_PRESS_ONLY); 
         
     }
     
@@ -502,7 +495,6 @@ public class BeantasticGame extends VariableFrameRateGame {
 		elapsTimeStr = Integer.toString(elapsTimeSec);
 		hud = "Time = " + elapsTimeStr ;
 		rs.setHUD(hud, 15, 15);
-		//im.update(elapsTime);	
 		playerController.updateCameraPosition();
 		processNetworking(elapsTime);
 		im.update(elapsTime);																			
