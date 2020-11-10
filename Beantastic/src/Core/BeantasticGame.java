@@ -46,15 +46,17 @@ public class BeantasticGame extends VariableFrameRateGame {
 	String elapsTimeStr, inputName, hud;
     int elapsTimeSec, counter = 0;
     
-    //Private variables for the class BeantasticGame-----------------------------------------------------------------------
+    //Private variables for the class BeantasticGame-----------------------------------------------------------------------------------------------------------------
     private InputManager im;
-    private Action moveForwardAction, moveBackwardAction, moveLeftAction, moveRightAction, moveCameraAction, moveDirectionAction, moveUpDownAction, rotateRightA, rotateLeftA, colorA;
+    private SceneManager sm;
+    private Action moveForwardAction, moveBackwardAction, moveLeftAction, moveRightAction, moveCameraAction, moveDirectionAction, moveUpDownAction, rotateRightA, rotateLeftA, colorA, rotateAction, rotatePlayerAction;
     public SceneNode cameraNode;
 	private SceneNode gameWorldObjectsNode;
 	private SceneNode playerObjectNode, manualObjectsNode;
     private Camera3pController playerController;	
     private static final String SKYBOX_NAME = "SkyBox";
     private boolean skyBoxVisible = true;
+    
 	//server variables---
 	private String serverAddress;
 	private int serverPort;
@@ -63,14 +65,14 @@ public class BeantasticGame extends VariableFrameRateGame {
 	private boolean isClientConnected;
 	private Vector<UUID> gameObjectsToRemove;
     
-    //Public variables for the class BeantasticGame------------------------------------------------------------------------
+    //Public variables for the class BeantasticGame------------------------------------------------------------------------------------------------------------------
     public Camera camera;
     public SceneNode playerNode;										
-    private SceneManager sm;
+
+    //Protected Variables--------------------------------------------------------------------------------------------------------------------------------------------
     
-    //script variables
+    //script variables----
     protected ScriptEngine jsEngine;
-    //public ColorAction colorAction;
     protected File scriptFile;
     
     //Constructor for the class BeantasticGame
@@ -80,10 +82,11 @@ public class BeantasticGame extends VariableFrameRateGame {
         this.serverAddress = serverAddr;
         this.serverPort = sPort;
         this.serverProtocol = ProtocolType.UDP;
-        isClientConnected=false;
+        isClientConnected = false;
         
     }
     
+    //Main function for the game
     public static void main(String[] args) {
     	
         Game game = new BeantasticGame(args[0], Integer.parseInt(args[1]));
@@ -105,45 +108,12 @@ public class BeantasticGame extends VariableFrameRateGame {
         }
         
     }
-    //Color action class TEST----------
     
-    private void setupNetworking() {
-    	gameObjectsToRemove = new Vector<UUID>();
-    	isClientConnected = false;
-    	try {   
-    		protClient = new ProtocolClient(InetAddress.getByName(serverAddress), serverPort, serverProtocol, this);
-    	}   
-    	catch (UnknownHostException e) { 
-    		e.printStackTrace();
-    	}   
-    	catch (IOException e) { 
-    		e.printStackTrace();
-    	} 
-    	if (protClient == null){   
-    		System.out.println("missing protocol host"); 
-    	} 
-    	else{ 
-    		// ask client protocol to send initial join message/ /to server, with a unique identifier for this 
-    		protClient.sendJoinMessage();
-    	}
-    }
+    //Game implementation starts here------------------------------------------------------------------------------------------------------------------------------------------
     
-    protected void processNetworking(float elapsTime) {
-    	if(protClient != null) {
-    		protClient.processPackets();
-    	}
-    	//Remove ghost avatars for players who have left the game
-    	Iterator<UUID> it = gameObjectsToRemove.iterator();
-    	while(it.hasNext()) {
-    		sm.destroySceneNode(it.next().toString());
-    	}
-    	gameObjectsToRemove.clear();
-    }
-    public Vector3 getPlayerPosition() {
-    	SceneNode playerN = sm.getSceneNode("playerNode");
-    	return playerN.getWorldPosition();
-    }
-    
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+	//Code for setting up the windows, cameras, scenes, objects, textures for the game-----------------------------------------------------------------------------------------
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     
 	@Override
 	protected void setupWindow(RenderSystem rs, GraphicsEnvironment ge) {
@@ -156,7 +126,6 @@ public class BeantasticGame extends VariableFrameRateGame {
     protected void setupCameras(SceneManager sm, RenderWindow rw) {
     	
     	SceneNode rootNode = sm.getRootSceneNode();
-    	
     	camera = sm.createCamera("MainCamera", Projection.PERSPECTIVE);
     	rw.getViewport(0).setCamera(camera);
     	cameraNode = rootNode.createChildSceneNode("MainCameraNode");
@@ -167,11 +136,9 @@ public class BeantasticGame extends VariableFrameRateGame {
     }
 	private void setupOrbitCameras(Engine eng, SceneManager sm) {
 		
-		SceneNode playerN = sm.getSceneNode("PlayerNode");
-		SceneNode cameraN = sm.getSceneNode("MainCameraNode");
-		Camera camera = sm.getCamera("MainCamera");
 		String msName = im.getMouseName();
-		playerController = new Camera3pController(camera, cameraN, playerN, msName, im);
+		playerController = new Camera3pController(camera, cameraNode, playerNode, msName, im, this);
+		
 	}
     @Override
     protected void setupScene(Engine eng, SceneManager sm) throws IOException {
@@ -183,127 +150,6 @@ public class BeantasticGame extends VariableFrameRateGame {
         gameWorldObjectsNode = sm.getRootSceneNode().createChildSceneNode("GameWorldObjectsNode");			        //Initializing the gameWorldObjects Scene Node
         manualObjectsNode = gameWorldObjectsNode.createChildSceneNode("ManualObjectsNode");							//Initializing the manualObjects scene node 
         
-        //Make two triangles for the floor/ground of the game------------------------------------------------------------------------------------------------------
-        //----Triangle 1 of 2----
-        ManualObject triangle1 = sm.createManualObject("triangle1");	
-        SceneNode triangle1Node = manualObjectsNode.createChildSceneNode("Triangle1Node");		
-        triangle1Node.scale(1000.0f, 0.05f, 1000.0f);
-        triangle1Node.moveDown(2.0f);
-        ManualObjectSection triangle1Sec = triangle1.createManualSection("triangle1Sec");
-        triangle1.setGpuShaderProgram(sm.getRenderSystem().getGpuShaderProgram(GpuShaderProgram.Type.RENDERING));
-        
-        //Setting the coordinates
-		float[] vertices1 = new float[] { 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // front top
-				1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 1.0f, 						// front bottom
-				0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 						// right top
-				0.0f, 0.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, -1.0f, 						// right bottom
-				0.0f, 0.0f, -1.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 						// left top
-				0.0f, 0.0f, -1.0f, 0.0f, -1.0f, -1.0f, 0.0f, -1.0f, 1.0f, 						// left bottom
-				0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 							// top
-				0.0f, -1.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f 						// bottom
-		};
-
-		float[] texture1 = new float[] { 0.0f, 0.0f, 1.0f, 0.0f, 0.5f, 1.0f, 					// front top
-				0.0f, 0.0f, 1.0f, 0.0f, 0.5f, 1.0f, 											// front bottom
-				0.0f, 0.0f, 1.0f, 0.0f, 0.5f, 1.0f, 											// right top
-				0.0f, 0.0f, 1.0f, 0.0f, 0.5f, 1.0f, 											// right bottom
-				0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 											// left top
-				0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 											// left bottom
-				0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 											// top
-				1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f 												// bottom
-
-		}; 										
-
-		float[] normals1 = new float[] { 0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, 	// front top
-				0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, 							// front bottom
-				0.5f, 0.0f, -0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.0f, -0.5f, 						// right top
-				0.5f, 0.0f, -0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.0f, -0.5f, 						// right bottom
-				-1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 						// left top
-				-1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 						// left bottom
-				0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 							// top
-				0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f 						// bottom
-
-		};
-
-		int[] indices1 = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 };
-		
-		FloatBuffer verticalBuffer1 = BufferUtil.directFloatBuffer(vertices1);
-		FloatBuffer normalBuffer1 = BufferUtil.directFloatBuffer(normals1);
-		FloatBuffer textureBuffer1 = BufferUtil.directFloatBuffer(texture1);
-		IntBuffer indicesBuffer1 = BufferUtil.directIntBuffer(indices1);
-		triangle1Sec.setVertexBuffer(verticalBuffer1);
-		triangle1Sec.setNormalsBuffer(normalBuffer1);
-		triangle1Sec.setTextureCoordsBuffer(textureBuffer1);
-		triangle1Sec.setIndexBuffer(indicesBuffer1);
-		Texture textureGround1 = eng.getTextureManager().getAssetByPath("red.jpeg");				//Texture file for the ground
-		TextureState textureGroundState1 = (TextureState)sm.getRenderSystem().createRenderState(RenderState.Type.TEXTURE);
-		textureGroundState1.setTexture(textureGround1);
-		FrontFaceState faceState1 = (FrontFaceState)sm.getRenderSystem().createRenderState(RenderState.Type.FRONT_FACE);
-		triangle1.setDataSource(DataSource.INDEX_BUFFER);
-		triangle1.setRenderState(textureGroundState1);
-		triangle1.setRenderState(faceState1);
-		triangle1Node.attachObject(triangle1);
-		
-		//----Triangle 2 of 2----
-        ManualObject triangle2 = sm.createManualObject("triangle2");
-        SceneNode triangle2Node = manualObjectsNode.createChildSceneNode("Triangle2Node");
-        triangle2Node.yaw(Degreef.createFrom(180.0f));
-        triangle2Node.scale(1000.0f, 0.05f, 1000.0f);
-        triangle2Node.moveDown(2.0f);
-        ManualObjectSection triangle2Sec = triangle1.createManualSection("triangle2Sec");
-        triangle2.setGpuShaderProgram(sm.getRenderSystem().getGpuShaderProgram(GpuShaderProgram.Type.RENDERING));
-        
-        //Setting the coordinates
-		float[] vertices2 = new float[] { 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // front top
-				1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 1.0f, 						// front bottom
-				0.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 						// right top
-				0.0f, 0.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, -1.0f, 						// right bottom
-				0.0f, 0.0f, -1.0f, 0.0f, -1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 						// left top
-				0.0f, 0.0f, -1.0f, 0.0f, -1.0f, -1.0f, 0.0f, -1.0f, 1.0f, 						// left bottom
-				0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 							// top
-				0.0f, -1.0f, -1.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 1.0f 						// bottom
-		};
-
-		float[] texture2 = new float[] { 0.0f, 0.0f, 1.0f, 0.0f, 0.5f, 1.0f, 					// front top
-				0.0f, 0.0f, 1.0f, 0.0f, 0.5f, 1.0f, 											// front bottom
-				0.0f, 0.0f, 1.0f, 0.0f, 0.5f, 1.0f, 											// right top
-				0.0f, 0.0f, 1.0f, 0.0f, 0.5f, 1.0f, 											// right bottom
-				0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 											// left top
-				0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 											// left bottom
-				0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 											// top
-				1.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f }; 											// bottom
-
-		float[] normals2 = new float[] { 0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, 	// front top
-				0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, 0.5f, 0.0f, 0.5f, 							// front bottom
-				0.5f, 0.0f, -0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.0f, -0.5f, 						// right top
-				0.5f, 0.0f, -0.5f, 0.5f, 0.0f, -0.5f, 0.5f, 0.0f, -0.5f, 						// right bottom
-				-1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 						// left top
-				-1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 						// left bottom
-				0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 							// top
-				0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f 						// bottom
-
-		};
-
-		int[] indices2 = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 };
-		
-		FloatBuffer verticalBuffer2 = BufferUtil.directFloatBuffer(vertices2);
-		FloatBuffer normalBuffer2 = BufferUtil.directFloatBuffer(normals2);
-		FloatBuffer textureBuffer2 = BufferUtil.directFloatBuffer(texture2);
-		IntBuffer indicesBuffer2 = BufferUtil.directIntBuffer(indices2);
-		triangle2Sec.setVertexBuffer(verticalBuffer2);
-		triangle2Sec.setNormalsBuffer(normalBuffer2);
-		triangle2Sec.setTextureCoordsBuffer(textureBuffer2);
-		triangle2Sec.setIndexBuffer(indicesBuffer2);
-		Texture textureGround2 = eng.getTextureManager().getAssetByPath("red.jpeg");				//Texture file for the ground
-		TextureState textureGroundState2 = (TextureState)sm.getRenderSystem().createRenderState(RenderState.Type.TEXTURE);
-		textureGroundState2.setTexture(textureGround2);
-		FrontFaceState faceState2 = (FrontFaceState)sm.getRenderSystem().createRenderState(RenderState.Type.FRONT_FACE);
-		triangle2.setDataSource(DataSource.INDEX_BUFFER);
-		triangle2.setRenderState(textureGroundState2);
-		triangle2.setRenderState(faceState2);
-		triangle2Node.attachObject(triangle2);		
-		//---------------------------------------------------------------------------------------------------------------------------------------------------
-		
 		//Creating the player node to add in the game, upgrade from last only entity approach
 		playerObjectNode = gameWorldObjectsNode.createChildSceneNode("PlayerNode");
 		
@@ -319,9 +165,6 @@ public class BeantasticGame extends VariableFrameRateGame {
         TextureState stated1 =  (TextureState) rsd1.createRenderState(RenderState.Type.TEXTURE);
         stated1.setTexture(assetd1);
         playerEntity.setRenderState(stated1);
-        
-        //Setting up the orbit controllers for the player
-        playerController = new Camera3pController(camera, cameraNode, playerNode, inputName, im);														
         playerNode.yaw(Degreef.createFrom(180.0f));
         
         // Set up Lights
@@ -334,22 +177,17 @@ public class BeantasticGame extends VariableFrameRateGame {
         
 		SceneNode plightNode = sm.getRootSceneNode().createChildSceneNode("plightNode");
         plightNode.attachObject(plight);
-      
-		/*
-		 * StretchController sc = new StretchController(); sc.addNode(playerNode);
-		 * sm.addController(sc);
-		 */
         
         //Setting up sky box   
         Configuration conf = eng.getConfiguration();
 		TextureManager tm= getEngine().getTextureManager();
 		tm.setBaseDirectoryPath(conf.valueOf("assets.skyboxes.path"));
-		Texture front = tm.getAssetByPath("front.png");
-		Texture back = tm.getAssetByPath("back.png");
-		Texture left = tm.getAssetByPath("left.png");
-		Texture right = tm.getAssetByPath("right.png");
-		Texture top = tm.getAssetByPath("top.png");
-		Texture bottom = tm.getAssetByPath("bot.png");
+		Texture front = tm.getAssetByPath("front.jpeg");
+		Texture back = tm.getAssetByPath("back.jpeg");
+		Texture left = tm.getAssetByPath("left.jpeg");
+		Texture right = tm.getAssetByPath("right.jpeg");
+		Texture top = tm.getAssetByPath("top.jpeg");
+		Texture bottom = tm.getAssetByPath("bottom.jpeg");
 		tm.setBaseDirectoryPath(conf.valueOf("assets.textures.path"));
 		
 		AffineTransform xform = new AffineTransform();        
@@ -380,38 +218,9 @@ public class BeantasticGame extends VariableFrameRateGame {
 				
 		tessN.scale(10, 20, 10);
 		tessN.setLocalPosition(-1, -1, -5);
-		tessE.setHeightMap(this.getEngine(), "terrain2.png");
-		tessE.setTexture(this.getEngine(), "tm.png");
-		
-		/*
-        Configuration conf = eng.getConfiguration();        
-        TextureManager tm = getEngine().getTextureManager();        
-        tm.setBaseDirectoryPath(conf.valueOf("assets.skyboxes.path"));        
-        Texture front = tm.getAssetByPath("front.jpeg");        
-        Texture back = tm.getAssetByPath("back.jpeg");        
-        Texture left = tm.getAssetByPath("left.jpeg");        
-        Texture right = tm.getAssetByPath("right.jpeg");        
-        Texture top = tm.getAssetByPath("top.jpeg");        
-        Texture bottom = tm.getAssetByPath("bottom.jpeg");        
-        tm.setBaseDirectoryPath(conf.valueOf("assets.textures.path"));              
-        AffineTransform xform = new AffineTransform();        
-        xform.translate(0, front.getImage().getHeight());        
-        xform.scale(1d, -1d);        
-        front.transform(xform);        
-        back.transform(xform);        
-        left.transform(xform);        
-        right.transform(xform);        
-        top.transform(xform);        
-        bottom.transform(xform);        
-        SkyBox sb = sm.createSkyBox(SKYBOX_NAME);        
-        sb.setTexture(front, SkyBox.Face.FRONT);        
-        sb.setTexture(back, SkyBox.Face.BACK);       
-        sb.setTexture(left, SkyBox.Face.LEFT);        
-        sb.setTexture(right, SkyBox.Face.RIGHT);        
-        sb.setTexture(top, SkyBox.Face.TOP);        
-        sb.setTexture(bottom, SkyBox.Face.BOTTOM);        
-        sm.setActiveSkyBox(sb);
-        */
+		tessE.setHeightMap(this.getEngine(), "moon.jpeg");
+		tessE.setTexture(this.getEngine(), "blue.jpeg");
+	
 		//TESTING professor's script
 		//Prepare script engine
 		ScriptEngineManager factory = new ScriptEngineManager();
@@ -430,28 +239,16 @@ public class BeantasticGame extends VariableFrameRateGame {
 		setupOrbitCameras(eng,sm);
         setupInputs(sm);																								//Calling the function to setup the inputs
 
-       
-    }
-    private void runScript(File scriptFile) {
-    	 try{ 
-    		 FileReader fileReader = new FileReader(scriptFile);      
-    		 jsEngine.eval(fileReader);      
-    		 fileReader.close();   
-    	 }
-    	 catch (FileNotFoundException e1){ 
-    		 System.out.println(scriptFile + " not found " + e1); 
-    	 }
-    	 catch (IOException e2){ 
-    		 System.out.println(scriptFile + " not found " + e2); 
-    	 }
-    	 catch (ScriptException e3){ 
-    		 System.out.println(scriptFile + " not found " + e3); 
-    	 }
-    	 catch (NullPointerException e4){ 
-    		 System.out.println(scriptFile + " not found " + e4); 
-    	 }
     }
 
+	//*****end of setting up the windows, cameras, scenes, objects, textures for the game*****
+    
+    
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+	//Input handling for gamepad and keyboard----------------------------------------------------------------------------------------------------------------------------------
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+    //Function to get the type of controller for the game
 	private void getInput() {
 		// TODO Auto-generated method stub
     	ArrayList<Controller> controllers = im.getControllers();						//Get the list of all the input devices available
@@ -472,14 +269,19 @@ public class BeantasticGame extends VariableFrameRateGame {
     	//moveDirectionAction = new MoveDirectionAction(playerNode, this);
     	//moveUpDownAction = new MoveUpDownAction(playerNode, this);
     	//rotateAction = new RotateAction(this);
+    	
     	//Initialization action gamepad
-    	Camera camera = sm.getCamera("MainCamera");
-    	moveForwardAction = new MoveForwardAction(playerNode, protClient);						//camera forward
+    	moveForwardAction = new MoveForwardAction(playerNode, protClient);				//camera forward
         moveBackwardAction = new MoveBackwardAction(playerNode);						//camera backward
         moveLeftAction = new MoveLeftAction(playerNode);								//camera left
         moveRightAction = new MoveRightAction(playerNode);	
         rotateRightA = new RotateRightAction(playerNode, camera);
         rotateLeftA = new RotateLeftAction(playerNode, camera);
+        rotateAction = new RotateAction(this);
+        moveDirectionAction = new MoveDirectionAction(playerNode, this);
+        moveUpDownAction = new MoveUpDownAction(playerNode, this);
+        rotatePlayerAction = new RotatePlayerAction(playerNode);
+        
         //colorA = new ColorAction(sm);
         //camera right
         //rotatePlayerLeftAction = new RotateLeftAction(playerNode, this);				    //Rotate the player left
@@ -501,10 +303,11 @@ public class BeantasticGame extends VariableFrameRateGame {
     //Function to handle the gamepad controlls
     void gamepadControls(Controller gpName) {
     	
-    	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.POV, moveCameraAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);  
-    	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.X, moveDirectionAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);  
+    	//im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.POV, moveCameraAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);  
+    	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.X, rotatePlayerAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);  
     	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.Y, moveUpDownAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN); 
-    	//im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.RX, rotateAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+    	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.RX, rotateAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+    	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.RY, rotateAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 
     }
 
@@ -517,35 +320,69 @@ public class BeantasticGame extends VariableFrameRateGame {
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.S, moveBackwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.Q, rotateLeftA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.E, rotateRightA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-        //im.associateAction(kbName,net.java.games.input.Component.Identifier.Key.SPACE, colorAction,InputManager.INPUT_ACTION_TYPE.ON_PRESS_ONLY);
+        
+    }
+    
+	//*****end of input handling*****
+    
+    
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+	//Networking part of the game----------------------------------------------------------------------------------------------------------------------------------------------
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    
+    //Function to setup networking
+    private void setupNetworking() {
+    	
+    	gameObjectsToRemove = new Vector<UUID>();
+    	isClientConnected = false;
+    	
+    	try {   
+    		protClient = new ProtocolClient(InetAddress.getByName(serverAddress), serverPort, serverProtocol, this);
+    	}   
+    	catch (UnknownHostException e) { 
+    		e.printStackTrace();
+    	}   
+    	catch (IOException e) { 
+    		e.printStackTrace();
+    	} 
+    	if (protClient == null){   
+    		System.out.println("missing protocol host"); 
+    	} 
+    	else{ 
+    		// ask client protocol to send initial join message/ /to server, with a unique identifier for this 
+    		protClient.sendJoinMessage();
+    	}
+    	
+    }
+    
+    //Function to process networking
+    protected void processNetworking(float elapsTime) {
+    	
+    	if(protClient != null) 
+    		protClient.processPackets();
+    	
+    	//Remove ghost avatars for players who have left the game
+    	Iterator<UUID> it = gameObjectsToRemove.iterator();
+    	while(it.hasNext()) 
+    		sm.destroySceneNode(it.next().toString());
+    	
+    	gameObjectsToRemove.clear();
+    	
     }
 
-    @Override
-    protected void update(Engine engine) {
-    	
-		// build and set HUD
-		rs = (GL4RenderSystem) engine.getRenderSystem();
-		elapsTime += engine.getElapsedTimeMillis();
-		elapsTimeSec = Math.round(elapsTime/1000.0f);
-		elapsTimeStr = Integer.toString(elapsTimeSec);
-		//hud = "Time = " + elapsTimeStr ;
-		//rs.setHUD(hud, 15, 15);
-		im.update(elapsTime);	
-		playerController.updateCameraPosition();
-		processNetworking(elapsTime);
-		
-		//im.update(elapsTime);																			//Error here, don't forget to include
-		
-	}
-
+    //Function to check if the client is connected or not
 	public void setIsConnected(boolean b) {
 		// TODO Auto-generated method stub
 		this.isClientConnected = b;
+		
 	}
 
+	//Function to add the ghost avatar of the other player
 	public void addGhostAvatarToGameWorldnew(GhostAvatar avatar, Vector3 ghostPosition) throws IOException{
 		// TODO Auto-generated method stub
+		
 		if(avatar!=null) {
+			
 			Entity ghostE = sm.createEntity("ghostN", "dolphinHighPoly.obj");
 			ghostE.setPrimitive(Primitive.TRIANGLES);
 			SceneNode ghostN = getEngine().getSceneManager().getRootSceneNode().createChildSceneNode(avatar.getID().toString());
@@ -554,8 +391,11 @@ public class BeantasticGame extends VariableFrameRateGame {
 			avatar.setNode(ghostN);
 			avatar.setEntity(ghostE);
 			avatar.setPosition(ghostPosition.x(), ghostPosition.y(), ghostPosition.z());
+			
 		}
+		
 	}
+	
 	public void addGhostAvatarToGameWorldold(GhostAvatar avatar, Vector3 ghostPosition) throws IOException{
 		// TODO Auto-generated method stub
 		
@@ -573,25 +413,37 @@ public class BeantasticGame extends VariableFrameRateGame {
 		}
 		
 	}
+	
+	//Function to remove Ghost avatar
 	public void removeGhostAvatarFromGameWorld(GhostAvatar avatar) {
 		// TODO Auto-generated method stub
+		
 		if(avatar!=null)
 			gameObjectsToRemove.add((UUID)avatar.getID());
+		
 	}
 	
-	private class SendCloseConnectionPacketAction extends AbstractInputAction
-    { // for leaving the game... need to attach to an input device
+	//Function to communicate
+	private class SendCloseConnectionPacketAction extends AbstractInputAction{
+		
+		// for leaving the game... need to attach to an input device
     	@Override
-    	public void performAction(float arg0, net.java.games.input.Event arg1)
-    	{ 
-    		if(protClient != null && isClientConnected == true)
-    		{ 
+    	public void performAction(float arg0, net.java.games.input.Event arg1){
+    	 
+    		if(protClient != null && isClientConnected == true) 
     			protClient.sendByeMessage();
-    		}
+    		
     	} 
+    	
 	}
-
-	//Getter and setter functions
+	
+	//*****end of networking functionalities*****
+	
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+	//Getter and setter functions----------------------------------------------------------------------------------------------------------------------------------------------
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+	
+	//Function to return the camera Elevation
 	public void setCameraElevationAngle(float newAngle) {
 		
 		this.playerController.setCameraElevationAngle(newAngle);
@@ -627,6 +479,71 @@ public class BeantasticGame extends VariableFrameRateGame {
 		return this.playerController.getAzimuth();
 		
 	}
+	 
+    //Function to return the position of the player
+    public Vector3 getPlayerPosition() {
+    	
+    	SceneNode playerN = sm.getSceneNode("playerNode");
+    	return playerN.getWorldPosition();
+    	
+    }
+    
+	//*****end of getter & setter methods*****
+    
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+	//Update function for the game---------------------------------------------------------------------------------------------------------------------------------------------
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    
+    //Function to keep updating all the gameWorld variables and states after each iteration
+    @Override
+    protected void update(Engine engine) {
+    	
+		// build and set HUD
+		rs = (GL4RenderSystem) engine.getRenderSystem();
+		elapsTime += engine.getElapsedTimeMillis();
+		elapsTimeSec = Math.round(elapsTime/1000.0f);
+		elapsTimeStr = Integer.toString(elapsTimeSec);
+		//hud = "Time = " + elapsTimeStr ;
+		//rs.setHUD(hud, 15, 15);
+		im.update(elapsTime);	
+		playerController.updateCameraPosition();
+		processNetworking(elapsTime);
+		
+		//im.update(elapsTime);																			//Error here, don't forget to include
+		
+	}
+    
+	//*****end of update function*****
+    
+    
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+	//Scripting Functionalities for the game-----------------------------------------------------------------------------------------------------------------------------------
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    
+    //Function to run the script file
+    private void runScript(File scriptFile) {
+    	
+    	 try{ 
+    		 FileReader fileReader = new FileReader(scriptFile);      
+    		 jsEngine.eval(fileReader);      
+    		 fileReader.close();   
+    	 }
+    	 catch (FileNotFoundException e1){ 
+    		 System.out.println(scriptFile + " not found " + e1); 
+    	 }
+    	 catch (IOException e2){ 
+    		 System.out.println(scriptFile + " not found " + e2); 
+    	 }
+    	 catch (ScriptException e3){ 
+    		 System.out.println(scriptFile + " not found " + e3); 
+    	 }
+    	 catch (NullPointerException e4){ 
+    		 System.out.println(scriptFile + " not found " + e4); 
+    	 }
+    	 
+    }
+    
+	//*****end of scripting Functionalities*****
 
 }
 

@@ -8,6 +8,7 @@ import ray.rage.scene.Camera;
 import ray.rage.scene.SceneNode;
 import ray.rml.Vector3;
 import ray.rml.Vector3f;
+import GameEngine.*;
 
 public class Camera3pController {
 	
@@ -15,16 +16,18 @@ public class Camera3pController {
 	private SceneNode cameraNode, playerNode;
 	private float cameraAz, cameraElevation, radius;
 	private Vector3 playerPosition, worldVector;
+	private BeantasticGame game;
 
-	public Camera3pController(Camera newCamera, SceneNode newCameraNode, SceneNode newPlayerNode, String newInputDeviceName, InputManager im) {
+	public Camera3pController(Camera newCamera, SceneNode newCameraNode, SceneNode newPlayerNode, String newInputDeviceName, InputManager im, BeantasticGame game) {
 		// TODO Auto-generated constructor stub
 				
 		//Initializing all the local variables
+		this.game = game;
 		camera = newCamera;
 		cameraNode = newCameraNode;
 		playerNode = newPlayerNode;
-		cameraAz = 0.0f;
-		cameraElevation = 20.0f;
+		cameraAz = 225.0f;
+		cameraElevation = 50.0f;
 		radius = 2.0f;
 		worldVector = Vector3f.createFrom(0.0f, 1.0f, 0.0f);
 		setUpInput(im, newInputDeviceName);
@@ -34,8 +37,8 @@ public class Camera3pController {
 	private void setUpInput(InputManager im, String inputDevice) {
 		// TODO Auto-generated method stub
 		
-		Action orbitAction = new OrbitAroundAction();
-		im.associateAction(inputDevice, net.java.games.input.Component.Identifier.Axis.RX, orbitAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+		Action RotateAction = new RotateAction(game);
+		im.associateAction(inputDevice, net.java.games.input.Component.Identifier.Axis.RX, RotateAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
 		
 	}
 	

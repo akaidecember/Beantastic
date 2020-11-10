@@ -21,12 +21,12 @@ public class RotateAction extends AbstractInputAction {
 	@Override
 	public void performAction(float arg0, Event e) {
 		
-		SceneNode player = game.getEngine().getSceneManager().getSceneNode("myPlayerNode");
+		SceneNode camera = game.getEngine().getSceneManager().getSceneNode("MainCameraNode");
 		
 		if (e.getValue() < -0.7) {
 			
 			Angle degree = Degreef.createFrom(5.0f);
-			player.yaw(degree);
+			camera.yaw(degree);
 			game.setCameraAzimuthAngle(game.getCameraAzimuthAngle() + 5.0f);
 			
 		}
@@ -34,7 +34,7 @@ public class RotateAction extends AbstractInputAction {
 		if (e.getValue() > 0.7) {
 			
 			Angle degree = Degreef.createFrom(-5.0f);
-			player.yaw(degree);
+			camera.yaw(degree);
 			game.setCameraAzimuthAngle(game.getCameraAzimuthAngle() - 5.0f);
 			
 		}
