@@ -11,16 +11,21 @@ import ray.rml.Vector3;
 import ray.rml.Vector3f;
 
 public class RotateRightAction extends AbstractInputAction {
-	private SceneNode dN;
+	
+	private SceneNode node;
 	private Camera camera;
-	public RotateRightAction(SceneNode dolphinN, Camera c) {
-		dN = dolphinN;
+	
+	public RotateRightAction(SceneNode newNode, Camera c) {
+		
+		node = newNode;
 		camera = c;
 
 	}
 	@Override
 	public void performAction(float a, Event e) {
+		
 		Angle rotAmt = Degreef.createFrom(-5.0f);
-		dN.yaw(rotAmt);
+		node.yaw(rotAmt);
+		
 	}
 }

@@ -49,7 +49,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     //Private variables for the class BeantasticGame-----------------------------------------------------------------------------------------------------------------
     private InputManager im;
     private SceneManager sm;
-    private Action moveForwardAction, moveBackwardAction, moveLeftAction, moveRightAction, moveCameraAction, moveDirectionAction, moveUpDownAction, rotateRightA, rotateLeftA, colorA, rotateAction, rotatePlayerAction;
+    private Action moveForwardAction, moveBackwardAction, moveDirectionAction, moveLeftAction, moveRightAction, rotateCameraLeftAction, rotateCameraRightAction, moveUpDownAction, rotateRightA, rotateLeftA, colorA, rotateAction, rotatePlayerAction;
     public SceneNode cameraNode;
 	private SceneNode gameWorldObjectsNode;
 	private SceneNode playerObjectNode, manualObjectsNode;
@@ -110,8 +110,8 @@ public class BeantasticGame extends VariableFrameRateGame {
     }
     
     //Game implementation starts here------------------------------------------------------------------------------------------------------------------------------------------
-    
-	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+   
+    //0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 	//Code for setting up the windows, cameras, scenes, objects, textures for the game-----------------------------------------------------------------------------------------
 	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     
@@ -270,14 +270,8 @@ public class BeantasticGame extends VariableFrameRateGame {
     protected void setupInputs(SceneManager sm){
     	
     	ArrayList<Controller> controllers = im.getControllers();						//Get the list of all the input devices available
-
-    	//Initialization action keyboard
-    	//moveCameraAction = new MoveCameraAction(this);
-    	//moveDirectionAction = new MoveDirectionAction(playerNode, this);
-    	//moveUpDownAction = new MoveUpDownAction(playerNode, this);
-    	//rotateAction = new RotateAction(this);
     	
-    	//Initialization action gamepad
+    	//Initialization actions
     	moveForwardAction = new MoveForwardAction(playerNode, protClient);				//camera forward
         moveBackwardAction = new MoveBackwardAction(playerNode);						//camera backward
         moveLeftAction = new MoveLeftAction(playerNode);								//camera left
@@ -288,12 +282,9 @@ public class BeantasticGame extends VariableFrameRateGame {
         moveDirectionAction = new MoveDirectionAction(playerNode, this);
         moveUpDownAction = new MoveUpDownAction(playerNode, this);
         rotatePlayerAction = new RotatePlayerAction(playerNode);
+        rotateCameraLeftAction = new RotateLeftKbAction(this);				   	 		//Rotate the player left
+        rotateCameraRightAction = new RotateRightKbAction(this);						//Rotate the player right
         
-        //colorA = new ColorAction(sm);
-        //camera right
-        //rotatePlayerLeftAction = new RotateLeftAction(playerNode, this);				    //Rotate the player left
-        //rotatePlayerRightAction = new RotateRightAction(playerNode, this);			//Rotate the player right
-
         //Error checking to check if the controllers are connected or not (ensuring the game does not crash)
         for (Controller c : controllers) {
         	
@@ -310,7 +301,6 @@ public class BeantasticGame extends VariableFrameRateGame {
     //Function to handle the gamepad controlls
     void gamepadControls(Controller gpName) {
     	
-    	//im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.POV, moveCameraAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);  
     	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.X, rotatePlayerAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);  
     	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.Y, moveUpDownAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN); 
     	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.RX, rotateAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
@@ -321,12 +311,12 @@ public class BeantasticGame extends VariableFrameRateGame {
     //Function to handle the keyboard controls
     void keyboardControls(Controller kbName) {
    
-        //im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.D, moveLeftAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-        //im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.A, moveRightAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.W, moveForwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.S, moveBackwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.A, rotateLeftA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.D, rotateRightA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.LEFT, rotateCameraLeftAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.RIGHT, rotateCameraRightAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);     
         
     }
     

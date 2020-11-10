@@ -8,16 +8,23 @@ import ray.rml.Angle;
 import ray.rml.Degreef;
 
 public class RotateLeftAction extends AbstractInputAction{
-	private SceneNode dN;
+	
+	private SceneNode node;
 	private Camera camera;
-	public RotateLeftAction(SceneNode dolphinN, Camera c) {
-		dN = dolphinN;
+	
+	public RotateLeftAction(SceneNode newNode, Camera c) {
+		
+		node = newNode;
 		camera = c;
+		
 	}
+	
 	@Override
 	public void performAction(float a, Event e) {
+		
 		Angle rotAmt1 = Degreef.createFrom(5.0f);
-		dN.yaw(rotAmt1);
+		node.yaw(rotAmt1);
+		
 
 	}
 }
