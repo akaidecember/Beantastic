@@ -4,3 +4,5 @@
 /compile.bat
 /StartGame.bat
 /StartSinglePlayer.bat
+/Scripts/
+/UpdateLightColor.js

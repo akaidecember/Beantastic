@@ -17,7 +17,6 @@ public class Camera3pController {
 	private float cameraAz, cameraElevation, radius;
 	private Vector3 playerPosition, worldVector;
 	private BeantasticGame game;
-	private Action rotateAction;
 
 	public Camera3pController(Camera newCamera, SceneNode newCameraNode, SceneNode newPlayerNode, String newInputDeviceName, InputManager im, BeantasticGame game) {
 		// TODO Auto-generated constructor stub
@@ -28,19 +27,22 @@ public class Camera3pController {
 		cameraNode = newCameraNode;
 		playerNode = newPlayerNode;
 		cameraAz = 225.0f;
+		//cameraAz = 45.0f;
 		cameraElevation = 50.0f;
 		radius = 2.0f;
 		worldVector = Vector3f.createFrom(0.0f, 1.0f, 0.0f);
-		this.rotateAction = new RotateAction(game);
 		setUpInput(im, newInputDeviceName);
-		
+		//updateCameraPosition();
 	}
 
 	private void setUpInput(InputManager im, String inputDevice) {
 		// TODO Auto-generated method stub
 		
-		im.associateAction(inputDevice, net.java.games.input.Component.Identifier.Axis.RX, rotateAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-		
+		Action RotateAction = new RotateAction(game);
+		//im.associateAction(inputDevice, net.java.games.input.Component.Identifier.Axis.RX, RotateAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+		im.associateAction(inputDevice, net.java.games.input.Component.Identifier.Axis.X, RotateAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+
+
 	}
 	
 	public void updateCameraPosition() {
@@ -54,7 +56,7 @@ public class Camera3pController {
 		y = radius * Math.sin(angle2);
 		z = radius * Math.cos(angle2) * Math.cos(angle1);
 		cameraNode.setLocalPosition(Vector3f.createFrom((float)x, (float)y, (float)z).add(playerNode.getWorldPosition()));
-		cameraNode.lookAt(playerNode, worldVector);;
+		cameraNode.lookAt(playerNode, worldVector);
 		
 	}
 
@@ -131,7 +133,6 @@ public class Camera3pController {
 			}
 			
 			setRotateAction(degree);
-			
 		}
 		
 	}

@@ -26,12 +26,14 @@ public class RotatePlayerAction extends AbstractInputAction {
 			Angle degree = Degreef.createFrom(5.0f);
 			playerNode.yaw(degree);
 			
+			
 		}
 
 		if (e.getValue() > 0.7) {
 			
 			Angle degree = Degreef.createFrom(-5.0f);
 			playerNode.yaw(degree);
+
 			
 		}
 		

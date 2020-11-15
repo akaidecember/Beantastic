@@ -11,7 +11,7 @@ import ray.rml.Degreef;
 public class RotateAction extends AbstractInputAction {
 	
 	private BeantasticGame game;
-
+	
 	public RotateAction(BeantasticGame g) {
 		
 		game = g;
@@ -25,17 +25,21 @@ public class RotateAction extends AbstractInputAction {
 		
 		if (e.getValue() < -0.7) {
 			
-			Angle degree = Degreef.createFrom(5.0f);
+			Angle degree = Degreef.createFrom(1.0f);
 			camera.yaw(degree);
-			game.setCameraAzimuthAngle(game.getCameraAzimuthAngle() + 5.0f);
+			//game.setCameraAzimuthAngle(game.getCameraAzimuthAngle() + 5.0f);
+			game.setCameraAzimuthAngle(game.getCameraAzimuthAngle() + 1.5f);
 			
 		}
 
 		if (e.getValue() > 0.7) {
 			
-			Angle degree = Degreef.createFrom(-5.0f);
+			Angle degree = Degreef.createFrom(-1.0f);
 			camera.yaw(degree);
-			game.setCameraAzimuthAngle(game.getCameraAzimuthAngle() - 5.0f);
+			//game.setCameraAzimuthAngle(game.getCameraAzimuthAngle() - 5.0f);
+			game.setCameraAzimuthAngle(game.getCameraAzimuthAngle() - 1.5f);
+
+
 			
 		}
 		
