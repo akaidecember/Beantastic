@@ -33,6 +33,7 @@ public class Camera3pController {
 		worldVector = Vector3f.createFrom(0.0f, 1.0f, 0.0f);
 		setUpInput(im, newInputDeviceName);
 		//updateCameraPosition();
+		
 	}
 
 	private void setUpInput(InputManager im, String inputDevice) {

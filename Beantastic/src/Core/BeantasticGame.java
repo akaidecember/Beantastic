@@ -135,12 +135,14 @@ public class BeantasticGame extends VariableFrameRateGame {
     	camera.getFrustum().setFarClipDistance(1000.0f);
     	
     }
+    
 	private void setupOrbitCameras(Engine eng, SceneManager sm) {
 		
 		String msName = im.getMouseName();
 		playerController = new Camera3pController(camera, cameraNode, playerNode, msName, im, this);
 		
 	}
+	
     @Override
     protected void setupScene(Engine eng, SceneManager sm) throws IOException {
     	
@@ -167,7 +169,6 @@ public class BeantasticGame extends VariableFrameRateGame {
         playerEntity.setRenderState(stated1);
         playerNode.yaw(Degreef.createFrom(180.0f));
         
-        
         //spaceship----
 		shipObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("shipNode");
         Entity shipEntity = sm.createEntity("myShip", "spaceship.obj");
@@ -192,6 +193,9 @@ public class BeantasticGame extends VariableFrameRateGame {
         oreNode.attachObject(oreEntity);
         oreNode.setLocalPosition(-5, 0, -5);
         oreNode.setLocalScale(0.05f, 0.05f, 0.05f);
+        RotationController rcOre = new RotationController(Vector3f.createUnitVectorY(), .1f);						//Rotation for the ore model in the game
+        rcOre.addNode(oreNode);
+        sm.addController(rcOre);
         
         //crystals----
 		crystalObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("crystalNode");
@@ -199,7 +203,7 @@ public class BeantasticGame extends VariableFrameRateGame {
         crystalEntity.setPrimitive(Primitive.TRIANGLES);
         crystalNode = crystalObjectNode.createChildSceneNode(crystalEntity.getName() + "Node");
         crystalNode.attachObject(crystalEntity);
-        crystalNode.setLocalPosition(3, 0, 3);
+        crystalNode.setLocalPosition(-3, 0, -3);
         crystalNode.setLocalScale(0.1f, 0.1f, 0.1f);
         
         // Set up Lights----
@@ -250,13 +254,11 @@ public class BeantasticGame extends VariableFrameRateGame {
 		Tessellation tessE = sm.createTessellation("tessE", 6);
 		tessE.setSubdivisions(8f);
 		SceneNode tessN = (SceneNode) sm.getRootSceneNode().createChildNode("TessN");
-		tessN.attachObject(tessE);
-				
+		tessN.attachObject(tessE);	
 		tessN.scale(15, 31, 15);
 		tessN.setLocalPosition(-1, -1, -5);
 		tessE.setHeightMap(this.getEngine(), "tn.png");
 		tessE.setTexture(this.getEngine(), "moon.jpeg");
-		
 		
 		//TESTING professor's script
 		//Prepare script engine
@@ -271,7 +273,6 @@ public class BeantasticGame extends VariableFrameRateGame {
 		im = new GenericInputManager();
 		String kbName = im.getKeyboardName();
 		//colorAction = new ColorAction(sm);
-		
 		
 		setupOrbitCameras(eng,sm);
         setupInputs(sm);																								//Calling the function to setup the inputs
@@ -300,12 +301,6 @@ public class BeantasticGame extends VariableFrameRateGame {
     protected void setupInputs(SceneManager sm){
     	
     	ArrayList<Controller> controllers = im.getControllers();						//Get the list of all the input devices available
-
-    	//Initialization action keyboard
-    	//moveCameraAction = new MoveCameraAction(this);
-    	//moveDirectionAction = new MoveDirectionAction(playerNode, this);
-    	//moveUpDownAction = new MoveUpDownAction(playerNode, this);
-    	//rotateAction = new RotateAction(this);
     	
     	//Initialization action gamepad
     	moveForwardAction = new MoveForwardAction(playerNode, protClient);				//camera forward
@@ -318,11 +313,6 @@ public class BeantasticGame extends VariableFrameRateGame {
         moveDirectionAction = new MoveDirectionAction(playerNode, this);
         moveUpDownAction = new MoveUpDownAction(playerNode, this);
         rotatePlayerAction = new RotatePlayerAction(playerNode);
-        
-        //colorA = new ColorAction(sm);
-        //camera right
-        //rotatePlayerLeftAction = new RotateLeftAction(playerNode, this);				    //Rotate the player left
-        //rotatePlayerRightAction = new RotateRightAction(playerNode, this);			//Rotate the player right
 
         //Error checking to check if the controllers are connected or not (ensuring the game does not crash)
         for (Controller c : controllers) {
@@ -344,8 +334,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.X, rotatePlayerAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);  
     	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.Y, moveUpDownAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN); 
     	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.RX, rotateAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-    	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.RY, rotateAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-    	
+    	im.associateAction(gpName, net.java.games.input.Component.Identifier.Axis.RY, rotateAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);	
 
     }
 
