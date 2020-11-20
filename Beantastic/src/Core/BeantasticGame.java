@@ -53,7 +53,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     private Action moveForwardAction, moveBackwardAction, moveLeftAction, moveRightAction, moveCameraAction, moveDirectionAction, moveUpDownAction, rotateRightA, rotateLeftA, colorA, rotateAction, rotatePlayerAction;
     public SceneNode cameraNode;
 	private SceneNode gameWorldObjectsNode;
-	private SceneNode playerObjectNode, manualObjectsNode, shipObjectNode, oreObjectNode;
+	private SceneNode playerObjectNode, manualObjectsNode, shipObjectNode, oreObjectNode, crystalObjectNode;
     private Camera3pController playerController;	
     private static final String SKYBOX_NAME = "SkyBox";
     private boolean skyBoxVisible = true;
@@ -68,7 +68,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     
     //Public variables for the class BeantasticGame------------------------------------------------------------------------------------------------------------------
     public Camera camera;
-    public SceneNode playerNode, shipNode, oreNode;										
+    public SceneNode playerNode, shipNode, oreNode, crystalNode;										
 
     //Protected Variables--------------------------------------------------------------------------------------------------------------------------------------------
     
@@ -174,7 +174,7 @@ public class BeantasticGame extends VariableFrameRateGame {
         shipEntity.setPrimitive(Primitive.TRIANGLES);
         shipNode = shipObjectNode.createChildSceneNode(shipEntity.getName() + "Node");
         shipNode.attachObject(shipEntity);
-        shipNode.setLocalPosition(3, 0, 3);
+        shipNode.setLocalPosition(0, 0, 0);
         
         TextureManager shipTM = eng.getTextureManager();
         //change cube.png is spaceship texture
@@ -190,8 +190,17 @@ public class BeantasticGame extends VariableFrameRateGame {
         oreEntity.setPrimitive(Primitive.TRIANGLES);
         oreNode = oreObjectNode.createChildSceneNode(oreEntity.getName() + "Node");
         oreNode.attachObject(oreEntity);
-        oreNode.setLocalPosition(0, 0, 0);
+        oreNode.setLocalPosition(-5, 0, -5);
         oreNode.setLocalScale(0.05f, 0.05f, 0.05f);
+        
+        //crystals----
+		crystalObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("crystalNode");
+        Entity crystalEntity = sm.createEntity("myCrystal", "crystal.obj");
+        crystalEntity.setPrimitive(Primitive.TRIANGLES);
+        crystalNode = crystalObjectNode.createChildSceneNode(crystalEntity.getName() + "Node");
+        crystalNode.attachObject(crystalEntity);
+        crystalNode.setLocalPosition(3, 0, 3);
+        crystalNode.setLocalScale(0.1f, 0.1f, 0.1f);
         
         // Set up Lights----
         sm.getAmbientLight().setIntensity(new Color(.3f, .3f, .3f));
