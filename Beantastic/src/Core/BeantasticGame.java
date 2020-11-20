@@ -53,7 +53,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     private Action moveForwardAction, moveBackwardAction, moveLeftAction, moveRightAction, moveCameraAction, moveDirectionAction, moveUpDownAction, rotateRightA, rotateLeftA, colorA, rotateAction, rotatePlayerAction;
     public SceneNode cameraNode;
 	private SceneNode gameWorldObjectsNode;
-	private SceneNode playerObjectNode, manualObjectsNode, shipObjectNode;
+	private SceneNode playerObjectNode, manualObjectsNode, shipObjectNode, oreObjectNode;
     private Camera3pController playerController;	
     private static final String SKYBOX_NAME = "SkyBox";
     private boolean skyBoxVisible = true;
@@ -68,7 +68,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     
     //Public variables for the class BeantasticGame------------------------------------------------------------------------------------------------------------------
     public Camera camera;
-    public SceneNode playerNode, shipNode;										
+    public SceneNode playerNode, shipNode, oreNode;										
 
     //Protected Variables--------------------------------------------------------------------------------------------------------------------------------------------
     
@@ -168,14 +168,13 @@ public class BeantasticGame extends VariableFrameRateGame {
         playerNode.yaw(Degreef.createFrom(180.0f));
         
         
-        //spaceship
-        
+        //spaceship----
 		shipObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("shipNode");
         Entity shipEntity = sm.createEntity("myShip", "spaceship.obj");
         shipEntity.setPrimitive(Primitive.TRIANGLES);
         shipNode = shipObjectNode.createChildSceneNode(shipEntity.getName() + "Node");
         shipNode.attachObject(shipEntity);
-        shipNode.setLocalPosition(0, 0, 0);
+        shipNode.setLocalPosition(3, 0, 3);
         
         TextureManager shipTM = eng.getTextureManager();
         //change cube.png is spaceship texture
@@ -185,8 +184,16 @@ public class BeantasticGame extends VariableFrameRateGame {
         shipS.setTexture(shipA);
         shipEntity.setRenderState(shipS);
         
+        //ores----
+		oreObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("oreNode");
+        Entity oreEntity = sm.createEntity("myOre", "ore.obj");
+        oreEntity.setPrimitive(Primitive.TRIANGLES);
+        oreNode = oreObjectNode.createChildSceneNode(oreEntity.getName() + "Node");
+        oreNode.attachObject(oreEntity);
+        oreNode.setLocalPosition(0, 0, 0);
+        oreNode.setLocalScale(0.05f, 0.05f, 0.05f);
         
-        // Set up Lights
+        // Set up Lights----
         sm.getAmbientLight().setIntensity(new Color(.3f, .3f, .3f));
 		Light plight = sm.createLight("testLamp1", Light.Type.POINT);
 		plight.setAmbient(new Color(.2f, .2f, .2f));
@@ -530,14 +537,12 @@ public class BeantasticGame extends VariableFrameRateGame {
 		im.update(elapsTime);	
 		playerController.updateCameraPosition();
 		processNetworking(elapsTime);
-		
 		//im.update(elapsTime);																			//Error here, don't forget to include
 		
 	}
     
 	//*****end of update function*****
-    
-    
+        
 	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 	//Scripting Functionalities for the game-----------------------------------------------------------------------------------------------------------------------------------
 	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
