@@ -341,12 +341,12 @@ public class BeantasticGame extends VariableFrameRateGame {
     //Function to handle the keyboard controls
     void keyboardControls(Controller kbName) {
    
-        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.D, moveLeftAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.A, moveRightAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        //im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.D, moveLeftAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        //im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.A, moveRightAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.W, moveForwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.S, moveBackwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.Q, rotateLeftA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.E, rotateRightA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.D, rotateLeftA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.A, rotateRightA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         
     }
     
@@ -390,6 +390,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     	
     	//Remove ghost avatars for players who have left the game
     	Iterator<UUID> it = gameObjectsToRemove.iterator();
+    	
     	while(it.hasNext()) 
     		sm.destroySceneNode(it.next().toString());
     	
@@ -530,12 +531,9 @@ public class BeantasticGame extends VariableFrameRateGame {
 		elapsTime += engine.getElapsedTimeMillis();
 		elapsTimeSec = Math.round(elapsTime/1000.0f);
 		elapsTimeStr = Integer.toString(elapsTimeSec);
-		//hud = "Time = " + elapsTimeStr ;
-		//rs.setHUD(hud, 15, 15);
 		im.update(elapsTime);	
 		playerController.updateCameraPosition();
 		processNetworking(elapsTime);
-		//im.update(elapsTime);																			//Error here, don't forget to include
 		
 	}
     
