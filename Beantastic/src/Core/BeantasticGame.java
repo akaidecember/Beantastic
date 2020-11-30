@@ -734,6 +734,15 @@ public class BeantasticGame extends VariableFrameRateGame {
         else{
         	setWalkFalse();
         }
+		
+		//Updating the sound variables with each gameEngine cycle
+		SceneManager sm = engine.getSceneManager();
+		SceneNode tempNode = sm.getSceneNode("myPlayerNode");
+		//stepSound.setLocation(tempNode.getWorldPosition());
+		bgSound.setLocation(tempNode.getWorldPosition());
+		setEarParameters(sm);
+		
+		//Update the input manager with elapsed time
 		im.update(elapsTime);	
 		
 	}
@@ -787,26 +796,26 @@ public class BeantasticGame extends VariableFrameRateGame {
     	}
     	
     	//Setting the resources with .wav files for the game
-    	resource1 =  audioManager.createAudioResource("Sounds/step.wav", AudioResourceType.AUDIO_SAMPLE);
+    	//resource1 =  audioManager.createAudioResource("Sounds/step.wav", AudioResourceType.AUDIO_SAMPLE);
     	resource2 = audioManager.createAudioResource("Sounds/Background.wav", AudioResourceType.AUDIO_SAMPLE);
     	
     	//Setting attributes for the sound
-    	stepSound = new Sound(resource1, SoundType.SOUND_EFFECT, 100, true);
-    	stepSound.initialize(audioManager);
-    	stepSound.setMaxDistance(10.0f);
-    	stepSound.setMinDistance(0.5f);
-    	stepSound.setRollOff(5.0f);
+		/*
+		 * stepSound = new Sound(resource1, SoundType.SOUND_EFFECT, 100, true);
+		 * stepSound.initialize(audioManager); stepSound.setMaxDistance(10.0f);
+		 * stepSound.setMinDistance(0.5f); stepSound.setRollOff(5.0f);
+		 */
     	bgSound = new Sound(resource2, SoundType.SOUND_MUSIC, 100, true);
     	bgSound.initialize(audioManager);
     	
     	//Attaching the sounds to the player
     	SceneNode playerNode = sm.getSceneNode("myPlayerNode");
-    	stepSound.setLocation(playerNode.getWorldPosition());
+    	//stepSound.setLocation(playerNode.getWorldPosition());
     	bgSound.setLocation(playerNode.getWorldPosition());
     	setEarParameters(sm);
     	
     	//Playing the sounds
-    	stepSound.play();
+    	//stepSound.play();
     	bgSound.play();
     	
     }
