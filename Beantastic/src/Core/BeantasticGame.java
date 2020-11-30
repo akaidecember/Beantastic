@@ -818,7 +818,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 		sparkSound.initialize(audioManager); 
 		sparkSound.setMaxDistance(2.0f);
 		sparkSound.setMinDistance(0.5f); 
-		sparkSound.setRollOff(1.2f);
+		sparkSound.setRollOff(10.0f);
     	
     	//Attaching the sounds to the player
     	SceneNode playerNode = sm.getSceneNode("myPlayerNode");
@@ -835,6 +835,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     	//Playing the sounds
     	//stepSound.play();
     	bgSound.play();
+    	sparkSound.play();
     	
     }
     
