@@ -1,5 +1,7 @@
 package Core;
 
+import static ray.rage.scene.SkeletalEntity.EndType.LOOP;
+
 import java.awt.*;
 import java.awt.List;
 import java.awt.event.*;
@@ -33,6 +35,8 @@ import ray.input.*;
 import ray.input.action.*;
 import ray.networking.IGameConnection.ProtocolType;
 import ray.physics.PhysicsObject;
+import ray.physics.PhysicsEngine;
+import ray.physics.PhysicsEngineFactory;
 import ray.rage.rendersystem.shader.*;
 import ray.rage.util.*;
 import GameEngine.*;
@@ -66,6 +70,17 @@ public class BeantasticGame extends VariableFrameRateGame {
 	private boolean isClientConnected;
 	private Vector<UUID> gameObjectsToRemove;
     
+    //Physics variables
+	private SceneNode ball1Node, ball2Node, groundNode;
+    private SceneNode cameraPositionNode;
+    private final static String GROUND_E = "Ground";
+    private final static String GROUND_N = "GroundNode";
+    private PhysicsEngine physicsEng; 
+    private PhysicsObject ball1PhysObj, ball2PhysObj, gndPlaneP;
+    private boolean running = false;
+    private boolean walkB, idleB;														//Animation
+	
+	
     //Public variables for the class BeantasticGame------------------------------------------------------------------------------------------------------------------
     public Camera camera;
     public SceneNode playerNode, shipNode, oreNode, crystalNode;										
@@ -84,6 +99,9 @@ public class BeantasticGame extends VariableFrameRateGame {
         this.serverPort = sPort;
         this.serverProtocol = ProtocolType.UDP;
         isClientConnected = false;
+        
+        walkB=false;
+        idleB=false;
         
     }
     
@@ -145,7 +163,20 @@ public class BeantasticGame extends VariableFrameRateGame {
 	
     @Override
     protected void setupScene(Engine eng, SceneManager sm) throws IOException {
+    	//physics demonstration
+    	SceneNode rootNode = sm.getRootSceneNode();
     	
+    	Entity ball1Entity = sm.createEntity("ball1", "dolphinHighPoly.obj"); 
+    	ball1Node = rootNode.createChildSceneNode("Ball1Node");
+    	ball1Node.attachObject(ball1Entity);
+    	ball1Node.setLocalPosition(0, 2, -2);
+    	ball1Node.setLocalScale(1f, 1f, 1f);
+
+    	Entity groundEntity = sm.createEntity(GROUND_E, "cube.obj");
+    	groundNode = rootNode.createChildSceneNode(GROUND_N);
+    	groundNode.attachObject(groundEntity);
+    	groundNode.setLocalPosition(0, -2, -2);
+
     	im = new GenericInputManager();		
     	setupNetworking();
     	//Initializing the input manager
@@ -156,18 +187,25 @@ public class BeantasticGame extends VariableFrameRateGame {
 		//Creating the player node to add in the game, upgrade from last only entity approach
 		playerObjectNode = gameWorldObjectsNode.createChildSceneNode("PlayerNode");
         //Creating a player
-        Entity playerEntity = sm.createEntity("myPlayer", "astro.obj");
-        playerEntity.setPrimitive(Primitive.TRIANGLES);
+        //Entity playerEntity = sm.createEntity("myPlayer", "astro.obj");
+        //playerEntity.setPrimitive(Primitive.TRIANGLES);
+		SkeletalEntity playerEntity = sm.createSkeletalEntity("myPlayer", "astroRig.rkm", "astro.rks");
         playerNode = playerObjectNode.createChildSceneNode(playerEntity.getName() + "Node");
         playerNode.attachObject(playerEntity);
+        playerNode.setLocalScale(.06f, .06f, .06f);
         //player texture
         TextureManager tmd1 = eng.getTextureManager();
-        Texture assetd1 = tmd1.getAssetByPath("astro1.png");
+        Texture assetd1 = tmd1.getAssetByPath("astroTex.png");
         RenderSystem rsd1 = sm.getRenderSystem();
         TextureState stated1 =  (TextureState) rsd1.createRenderState(RenderState.Type.TEXTURE);
         stated1.setTexture(assetd1);
         playerEntity.setRenderState(stated1);
         playerNode.yaw(Degreef.createFrom(180.0f));
+        
+        //animations----
+        playerEntity.loadAnimation("walk", "walk2.rka");
+        //Idle is not used currently
+        //playerEntity.loadAnimation("idle", "idle.rka");
         
         //spaceship----
 		shipObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("shipNode");
@@ -274,11 +312,102 @@ public class BeantasticGame extends VariableFrameRateGame {
 		String kbName = im.getKeyboardName();
 		//colorAction = new ColorAction(sm);
 		
+		initPhysicsSystem();
+    	createRagePhysicsWorld();
 		setupOrbitCameras(eng,sm);
         setupInputs(sm);																								//Calling the function to setup the inputs
 
     }
-
+    
+    //Physics methods start-------------------------------
+    
+    private void initPhysicsSystem() {
+		// TODO Auto-generated method stub
+		String engine = "ray.physics.JBullet.JBulletPhysicsEngine";
+		float[] gravity = {0, -3f, 0};
+		physicsEng = PhysicsEngineFactory.createPhysicsEngine(engine);
+		physicsEng.initSystem();
+		physicsEng.setGravity(gravity);
+	}
+    
+    private void createRagePhysicsWorld() {
+		// TODO Auto-generated method stub
+		 float mass = 1.0f;
+		 float up[] = {0,1,0};
+		 double[] temptf; 
+		 
+		 temptf = toDoubleArray(ball1Node.getLocalTransform().toFloatArray());
+		 ball1PhysObj = physicsEng.addSphereObject(physicsEng.nextUID(),mass, temptf, 2.0f);
+		 
+		 ball1PhysObj.setBounciness(1f);
+		 ball1Node.setPhysicsObject(ball1PhysObj);
+		 
+		 //PLAYER NOT WORKING
+		 /*temptf = toDoubleArray(playerNode.getLocalTransform().toFloatArray());
+		 ball2PhysObj = physicsEng.addSphereObject(physicsEng.nextUID(),mass, temptf, 2.0f);
+		 
+		 //ball2PhysObj.setBounciness(.01f);
+		 //ball2PhysObj.setFriction(1f);
+		 playerNode.setPhysicsObject(ball2PhysObj);
+		 */
+		 temptf = toDoubleArray(groundNode.getLocalTransform().toFloatArray());
+		 gndPlaneP = physicsEng.addStaticPlaneObject(physicsEng.nextUID(),temptf, up, 0.0f);
+		 gndPlaneP.setBounciness(1f);
+		 groundNode.scale(3f, .05f, 3f);
+		 groundNode.setLocalPosition(0, -7, -2);
+		 groundNode.setPhysicsObject(gndPlaneP);
+		
+	}
+    
+    private double[] toDoubleArray(float[] arr) {
+		// TODO Auto-generated method stub
+    	
+		if (arr == null) 
+			 return null;
+		
+		int n = arr.length;
+		double[] ret = new double[n];
+		
+		for (int i = 0; i < n; i++) 
+			ret[i] = (double)arr[i];
+	    
+		return ret;
+		
+	}
+    
+	private float[] toFloatArray(double[] arr) {
+		// TODO Auto-generated method stub
+		
+		if (arr == null) 
+			 return null;
+		
+		int n = arr.length;
+		float[] ret = new float[n];
+		
+		for (int i = 0; i < n; i++)  
+			ret[i] = (float)arr[i];
+	    
+		return ret;
+		
+	}
+	
+	//start physics by pressing space
+	public void keyPressed(KeyEvent e){
+		
+    	switch (e.getKeyCode()){   
+    	
+    		case KeyEvent.VK_SPACE:System.out.println("Starting Physics!");
+    			running = true;
+    			break;
+    			
+    	} 
+    	
+    	super.keyPressed(e);
+    	
+    }
+	
+    //Physics methods END^^^^^^^^^^^^^^^^^^^^^
+	
 	//*****end of setting up the windows, cameras, scenes, objects, textures for the game*****
     
     
@@ -303,9 +432,10 @@ public class BeantasticGame extends VariableFrameRateGame {
     	ArrayList<Controller> controllers = im.getControllers();						//Get the list of all the input devices available
     	
     	//Initialization action gamepad
-    	moveForwardAction = new MoveForwardAction(playerNode, protClient);				//camera forward
-        moveBackwardAction = new MoveBackwardAction(playerNode);						//camera backward
-        moveLeftAction = new MoveLeftAction(playerNode);								//camera left
+    	//"MoveForward-sAction.java " is not used
+    	moveForwardAction = new MoveForwardAction(playerNode, protClient, this, true);  
+        moveBackwardAction = new MoveBackwardAction(playerNode);						
+        moveLeftAction = new MoveLeftAction(playerNode);								
         moveRightAction = new MoveRightAction(playerNode);	
         rotateRightA = new RotateRightAction(playerNode, camera);
         rotateLeftA = new RotateLeftAction(playerNode, camera);
@@ -345,8 +475,8 @@ public class BeantasticGame extends VariableFrameRateGame {
         //im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.A, moveRightAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.W, moveForwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.S, moveBackwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.D, rotateLeftA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.A, rotateRightA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.A, rotateLeftA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.D, rotateRightA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         
     }
     
@@ -523,6 +653,47 @@ public class BeantasticGame extends VariableFrameRateGame {
 	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     
     //Function to keep updating all the gameWorld variables and states after each iteration
+    public void setWalkTrue(boolean animW)
+    {
+    	walkB = animW;
+    }
+    public void setWalkFalse()
+    {
+    	walkB = false;
+    }
+    public void setIdleTrue(boolean animI)
+    {
+    	idleB = animI;
+    }
+    public void setIdleFalse()
+    {
+    	idleB = false;
+    }
+    
+    private void doTheWalk() {
+    	
+    	SkeletalEntity playerEntity = (SkeletalEntity) getEngine().getSceneManager().getEntity("myPlayer");
+    	playerEntity.stopAnimation();
+    	playerEntity.playAnimation("walk", 0.75f, LOOP, 0);
+    	
+    }
+    
+    private void Idle() {
+    	
+    	SkeletalEntity playerEntity = (SkeletalEntity) getEngine().getSceneManager().getEntity("myPlayer");
+    	playerEntity.stopAnimation();
+    	playerEntity.playAnimation("idle", .9f, LOOP, 0);
+    	
+
+    }
+    
+    private void doTheStop() {
+    	
+    	SkeletalEntity playerEntity = (SkeletalEntity) getEngine().getSceneManager().getEntity("myPlayer");
+    	playerEntity.stopAnimation();
+    	
+    }
+    
     @Override
     protected void update(Engine engine) {
     	
@@ -534,6 +705,27 @@ public class BeantasticGame extends VariableFrameRateGame {
 		im.update(elapsTime);	
 		playerController.updateCameraPosition();
 		processNetworking(elapsTime);
+		//physics
+		if(running) {
+			Matrix4 mat;
+			physicsEng.update(elapsTime);
+			for(SceneNode s: engine.getSceneManager().getSceneNodes()){
+				if(s.getPhysicsObject()!=null) {
+					mat = Matrix4f.createFrom(toFloatArray(s.getPhysicsObject().getTransform()));
+					s.setLocalPosition(mat.value(0, 3), mat.value(1, 3), mat.value(2, 3));
+				}
+			}
+		}
+		//animations
+		SkeletalEntity playerEntity = (SkeletalEntity) engine.getSceneManager().getEntity("myPlayer");
+    	playerEntity.update();
+		if(!walkB){
+    		doTheWalk();
+        }
+        else{
+        	setWalkFalse();
+        }
+		im.update(elapsTime);	
 		
 	}
     

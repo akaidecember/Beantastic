@@ -13,14 +13,19 @@ public class MoveForwardAction extends AbstractInputAction {
 
 	private SceneNode dN;
 	private ProtocolClient protClient;
-	public MoveForwardAction(SceneNode dolphinN, ProtocolClient p) {
+	private boolean a;
+	private BeantasticGame game;
+	public MoveForwardAction(SceneNode dolphinN, ProtocolClient p, BeantasticGame g, boolean anim) {
 		dN = dolphinN;
 		protClient = p;
+		a = anim;
+		game = g;
 	}
 	@Override
 	public void performAction(float a, Event e) {
 		dN.moveForward(0.05f);
 		protClient.sendMoveMessage(dN.getWorldPosition(), "forward");
+		game.setWalkTrue(true);
 	}
 	
 }
