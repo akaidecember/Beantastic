@@ -42,6 +42,8 @@ import ray.rage.util.*;
 import GameEngine.*;
 import net.java.games.input.Controller;
 import net.java.games.input.Event;
+import ray.audio.*;
+import com.jogamp.openal.ALFactory;
 
 //Class declaration for BeantasticGame
 public class BeantasticGame extends VariableFrameRateGame {
@@ -77,9 +79,14 @@ public class BeantasticGame extends VariableFrameRateGame {
     private final static String GROUND_N = "GroundNode";
     private PhysicsEngine physicsEng; 
     private PhysicsObject ball1PhysObj, ball2PhysObj, gndPlaneP;
+    
+    //Animation variables
     private boolean running = false;
     private boolean walkB, idleB;														//Animation
 	
+    //Sound variables
+    private IAudioManager audioManager;  
+    private Sound stepSound, bgSound;
 	
     //Public variables for the class BeantasticGame------------------------------------------------------------------------------------------------------------------
     public Camera camera;
@@ -316,10 +323,16 @@ public class BeantasticGame extends VariableFrameRateGame {
     	createRagePhysicsWorld();
 		setupOrbitCameras(eng,sm);
         setupInputs(sm);																								//Calling the function to setup the inputs
-
+        initAudio(sm);
+        
     }
+	
+	//*****end of setting up the windows, cameras, scenes, objects, textures for the game*****
+	
     
-    //Physics methods start-------------------------------
+    //0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+	//Physics method for the game----------------------------------------------------------------------------------------------------------------------------------------------
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     
     private void initPhysicsSystem() {
 		// TODO Auto-generated method stub
@@ -406,11 +419,8 @@ public class BeantasticGame extends VariableFrameRateGame {
     	
     }
 	
-    //Physics methods END^^^^^^^^^^^^^^^^^^^^^
+    //**********Physics methods END**********
 	
-	//*****end of setting up the windows, cameras, scenes, objects, textures for the game*****
-    
-    
 	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 	//Input handling for gamepad and keyboard----------------------------------------------------------------------------------------------------------------------------------
 	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -481,7 +491,6 @@ public class BeantasticGame extends VariableFrameRateGame {
     }
     
 	//*****end of input handling*****
-    
     
 	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 	//Networking part of the game----------------------------------------------------------------------------------------------------------------------------------------------
@@ -760,5 +769,59 @@ public class BeantasticGame extends VariableFrameRateGame {
     
 	//*****end of scripting Functionalities*****
 
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+	//Sound functionalities for the game---------------------------------------------------------------------------------------------------------------------------------------
+	//0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+
+    //Function to initialize the audio
+    public void initAudio(SceneManager sm) {
+    	
+    	AudioResource  resource1, resource2;
+    	audioManager = AudioManagerFactory.createAudioManager("ray.audio.joal.JOALAudioManager");
+    	
+    	if(!audioManager.initialize()) {
+
+    		System.out.println("Audio manager failed to initialize");
+    		return;
+    				
+    	}
+    	
+    	//Setting the resources with .wav files for the game
+    	resource1 =  audioManager.createAudioResource("Sounds/step.wav", AudioResourceType.AUDIO_SAMPLE);
+    	resource2 = audioManager.createAudioResource("Sounds/Background.wav", AudioResourceType.AUDIO_SAMPLE);
+    	
+    	//Setting attributes for the sound
+    	stepSound = new Sound(resource1, SoundType.SOUND_EFFECT, 100, true);
+    	stepSound.initialize(audioManager);
+    	stepSound.setMaxDistance(10.0f);
+    	stepSound.setMinDistance(0.5f);
+    	stepSound.setRollOff(5.0f);
+    	bgSound = new Sound(resource2, SoundType.SOUND_MUSIC, 100, true);
+    	bgSound.initialize(audioManager);
+    	
+    	//Attaching the sounds to the player
+    	SceneNode playerNode = sm.getSceneNode("myPlayerNode");
+    	stepSound.setLocation(playerNode.getWorldPosition());
+    	bgSound.setLocation(playerNode.getWorldPosition());
+    	setEarParameters(sm);
+    	
+    	//Playing the sounds
+    	stepSound.play();
+    	bgSound.play();
+    	
+    }
+    
+    //Function to set the ear parameters for the player
+    public void setEarParameters(SceneManager sm) {
+    	
+    	SceneNode playerNode = sm.getSceneNode("myPlayerNode");
+    	Vector3 avDir = playerNode.getWorldForwardAxis();
+    	audioManager.getEar().setLocation(playerNode.getWorldPosition());
+    	audioManager.getEar().setOrientation(avDir, Vector3f.createFrom(0,1,0));
+    	
+    }
+    
+    
+	//*****end of sound Functionalities*****
 }
 

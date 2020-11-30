@@ -8,5 +8,9 @@
 	<classpathentry kind="lib" path="C:/javagaming/jogl/jogamp-all-platforms/jar/jogl-all.jar"/>
 	<classpathentry kind="lib" path="C:/javagaming/rage165/ray.jar" sourcepath="C:/javagaming/rage165/javadoc/ray"/>
 	<classpathentry kind="lib" path="C:/javagaming/vecmath/vecmath.jar"/>
+	<classpathentry kind="lib" path="C:/javagaming/jogl/jogl-all.jar"/>
+	<classpathentry kind="lib" path="C:/javagaming/jogl/gluegen-rt.jar"/>
+	<classpathentry kind="lib" path="C:/javagaming/graphicslib3D/graphicslib3D.jar"/>
+	<classpathentry kind="lib" path="C:/javagaming/jogl/joal.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
