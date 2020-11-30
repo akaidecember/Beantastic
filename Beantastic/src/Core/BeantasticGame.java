@@ -86,7 +86,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 	
     //Sound variables
     private IAudioManager audioManager;  
-    private Sound stepSound, bgSound;
+    private Sound stepSound, bgSound, sparkSound;
 	
     //Public variables for the class BeantasticGame------------------------------------------------------------------------------------------------------------------
     public Camera camera;
@@ -737,9 +737,10 @@ public class BeantasticGame extends VariableFrameRateGame {
 		
 		//Updating the sound variables with each gameEngine cycle
 		SceneManager sm = engine.getSceneManager();
-		SceneNode tempNode = sm.getSceneNode("myPlayerNode");
+		SceneNode playerNode = sm.getSceneNode("myPlayerNode"), shipNode = sm.getSceneNode("myShipNode");		
 		//stepSound.setLocation(tempNode.getWorldPosition());
-		bgSound.setLocation(tempNode.getWorldPosition());
+		bgSound.setLocation(playerNode.getWorldPosition());
+		sparkSound.setLocation(shipNode.getWorldPosition());
 		setEarParameters(sm);
 		
 		//Update the input manager with elapsed time
@@ -785,7 +786,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     //Function to initialize the audio
     public void initAudio(SceneManager sm) {
     	
-    	AudioResource  resource1, resource2;
+    	AudioResource  resource1, resource2, resource3;
     	audioManager = AudioManagerFactory.createAudioManager("ray.audio.joal.JOALAudioManager");
     	
     	if(!audioManager.initialize()) {
@@ -798,20 +799,37 @@ public class BeantasticGame extends VariableFrameRateGame {
     	//Setting the resources with .wav files for the game
     	//resource1 =  audioManager.createAudioResource("Sounds/step.wav", AudioResourceType.AUDIO_SAMPLE);
     	resource2 = audioManager.createAudioResource("Sounds/Background.wav", AudioResourceType.AUDIO_SAMPLE);
+    	resource3 = audioManager.createAudioResource("Sounds/sparks.wav", AudioResourceType.AUDIO_SAMPLE);
+
     	
     	//Setting attributes for the sound
 		/*
 		 * stepSound = new Sound(resource1, SoundType.SOUND_EFFECT, 100, true);
-		 * stepSound.initialize(audioManager); stepSound.setMaxDistance(10.0f);
-		 * stepSound.setMinDistance(0.5f); stepSound.setRollOff(5.0f);
+		 * stepSound.initialize(audioManager); 
+		 * stepSound.setMaxDistance(10.0f);
+		 * stepSound.setMinDistance(0.5f); 
+		 * stepSound.setRollOff(5.0f);
 		 */
+    	
     	bgSound = new Sound(resource2, SoundType.SOUND_MUSIC, 100, true);
     	bgSound.initialize(audioManager);
+    	
+		sparkSound = new Sound(resource3, SoundType.SOUND_EFFECT, 100, true);
+		sparkSound.initialize(audioManager); 
+		sparkSound.setMaxDistance(2.0f);
+		sparkSound.setMinDistance(0.5f); 
+		sparkSound.setRollOff(1.2f);
     	
     	//Attaching the sounds to the player
     	SceneNode playerNode = sm.getSceneNode("myPlayerNode");
     	//stepSound.setLocation(playerNode.getWorldPosition());
     	bgSound.setLocation(playerNode.getWorldPosition());
+    	
+    	//Attaching the sounds to the space ship
+    	SceneNode spaceShip = sm.getSceneNode("myShipNode");
+    	sparkSound.setLocation(spaceShip.getWorldPosition());
+    	
+    	//Setting the ear parameters for the player
     	setEarParameters(sm);
     	
     	//Playing the sounds
