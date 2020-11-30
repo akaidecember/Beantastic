@@ -1,7 +1,6 @@
 package Core;
 
 import static ray.rage.scene.SkeletalEntity.EndType.LOOP;
-
 import java.awt.*;
 import java.awt.List;
 import java.awt.event.*;
@@ -11,7 +10,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.*;
 import java.util.*;
-
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
@@ -28,7 +26,6 @@ import ray.rage.scene.Camera.Frustum.*;
 import ray.rage.scene.controllers.*;
 import ray.rml.*;
 import ray.rage.rendersystem.gl4.GL4RenderSystem;
-
 import ray.rage.rendersystem.states.*;
 import ray.rage.asset.texture.*;
 import ray.input.*;
