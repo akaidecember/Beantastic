@@ -241,7 +241,8 @@ public class BeantasticGame extends VariableFrameRateGame {
         shipEntity.setPrimitive(Primitive.TRIANGLES);
         shipNode = shipObjectNode.createChildSceneNode(shipEntity.getName() + "Node");
         shipNode.attachObject(shipEntity);
-        shipNode.setLocalPosition(0, 0, 0);
+        shipNode.setLocalPosition(0, -0.6f, 0);
+    	shipNode.setLocalScale(2f, 2f, 2f);
         
         TextureManager shipTM = eng.getTextureManager();
         //change cube.png is spaceship texture
@@ -269,7 +270,7 @@ public class BeantasticGame extends VariableFrameRateGame {
         crystalEntity.setPrimitive(Primitive.TRIANGLES);
         crystalNode = crystalObjectNode.createChildSceneNode(crystalEntity.getName() + "Node");
         crystalNode.attachObject(crystalEntity);
-        crystalNode.setLocalPosition(-3, 0, -3);
+        crystalNode.setLocalPosition(-3, -0.6f, -3);
         crystalNode.setLocalScale(0.1f, 0.1f, 0.1f);
         
         // Set up Lights----
@@ -321,7 +322,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 		tessE.setSubdivisions(8f);
 		SceneNode tessN = (SceneNode) sm.getRootSceneNode().createChildNode("TessN");
 		tessN.attachObject(tessE);	
-		tessN.scale(15, 31, 15);
+		tessN.scale(100, 31, 100);
 		tessN.setLocalPosition(-1, -1, -5);
 		tessE.setHeightMap(this.getEngine(), "tn.png");
 		tessE.setTexture(this.getEngine(), "moon.jpeg");
@@ -746,6 +747,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 				}
 			}
 		}
+		
 		//animations
 		SkeletalEntity playerEntity = (SkeletalEntity) engine.getSceneManager().getEntity("myPlayer");
     	playerEntity.update();
