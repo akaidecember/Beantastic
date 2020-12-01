@@ -1,7 +1,6 @@
 package Core;
 
 import static ray.rage.scene.SkeletalEntity.EndType.LOOP;
-
 import java.awt.*;
 import java.awt.List;
 import java.awt.event.*;
@@ -11,7 +10,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.*;
 import java.util.*;
-
 import javax.script.Invocable;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
@@ -28,7 +26,6 @@ import ray.rage.scene.Camera.Frustum.*;
 import ray.rage.scene.controllers.*;
 import ray.rml.*;
 import ray.rage.rendersystem.gl4.GL4RenderSystem;
-
 import ray.rage.rendersystem.states.*;
 import ray.rage.asset.texture.*;
 import ray.input.*;
@@ -59,7 +56,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     private Action moveForwardAction, moveBackwardAction, moveLeftAction, moveRightAction, moveCameraAction, moveDirectionAction, moveUpDownAction, rotateRightA, rotateLeftA, colorA, rotateAction, rotatePlayerAction;
     public SceneNode cameraNode;
 	private SceneNode gameWorldObjectsNode;
-	private SceneNode playerObjectNode, manualObjectsNode, shipObjectNode, oreObjectNode, crystalObjectNode;
+	private SceneNode playerObjectNode, manualObjectsNode, shipObjectNode, oreObjectNode, crystalObjectNode, npcObjectNode;
     private Camera3pController playerController;	
     private static final String SKYBOX_NAME = "SkyBox";
     private boolean skyBoxVisible = true;
@@ -90,7 +87,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 	
     //Public variables for the class BeantasticGame------------------------------------------------------------------------------------------------------------------
     public Camera camera;
-    public SceneNode playerNode, shipNode, oreNode, crystalNode;										
+    public SceneNode playerNode, shipNode, oreNode, crystalNode, npcNode;									
 
     //Protected Variables--------------------------------------------------------------------------------------------------------------------------------------------
     
@@ -213,7 +210,19 @@ public class BeantasticGame extends VariableFrameRateGame {
         playerEntity.loadAnimation("walk", "walk2.rka");
         //Idle is not used currently
         //playerEntity.loadAnimation("idle", "idle.rka");
-        
+        //npc
+        SkeletalEntity npcEntity = sm.createSkeletalEntity("npc", "astroRig.rkm", "astro.rks");
+        Texture texNpc = sm.getTextureManager().getAssetByPath("npcTex.png");
+        TextureState tstateNpc = (TextureState) sm.getRenderSystem().createRenderState(RenderState.Type.TEXTURE);
+        tstateNpc.setTexture(texNpc);
+        npcEntity.setRenderState(tstateNpc);
+        npcObjectNode = gameWorldObjectsNode.createChildSceneNode("NpcNode");
+        npcNode = npcObjectNode.createChildSceneNode(npcEntity.getName() + "Node");
+        npcNode.attachObject(npcEntity);
+        npcNode.scale(.2f, .2f, .2f);
+        npcNode.translate(-3f, .5f, -5f);
+        npcEntity.loadAnimation("idle", "idle.rka");
+    	  npcEntity.playAnimation("idle", 1.5f, LOOP, 0);
         //spaceship----
 		shipObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("shipNode");
         Entity shipEntity = sm.createEntity("myShip", "spaceship.obj");
@@ -728,6 +737,8 @@ public class BeantasticGame extends VariableFrameRateGame {
 		//animations
 		SkeletalEntity playerEntity = (SkeletalEntity) engine.getSceneManager().getEntity("myPlayer");
     	playerEntity.update();
+      SkeletalEntity npcEntity = (SkeletalEntity) engine.getSceneManager().getEntity("npc");
+    	npcEntity.update();
 		if(!walkB){
     		doTheWalk();
         }
