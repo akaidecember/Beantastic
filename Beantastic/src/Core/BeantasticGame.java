@@ -167,14 +167,22 @@ public class BeantasticGame extends VariableFrameRateGame {
 	
     @Override
     protected void setupScene(Engine eng, SceneManager sm) throws IOException {
+    	
     	//physics demonstration
     	SceneNode rootNode = sm.getRootSceneNode();
     	
-    	Entity ball1Entity = sm.createEntity("ball1", "dolphinHighPoly.obj"); 
+    	Entity ball1Entity = sm.createEntity("ball1", "rock.obj"); 
     	ball1Node = rootNode.createChildSceneNode("Ball1Node");
     	ball1Node.attachObject(ball1Entity);
     	ball1Node.setLocalPosition(0, 2, -2);
-    	ball1Node.setLocalScale(1f, 1f, 1f);
+    	ball1Node.setLocalScale(0.2f, 0.2f, 0.2f);
+    	TextureManager texRock = eng.getTextureManager();
+    	Texture moonRock = texRock.getAssetByPath("OldMoon.jpg");
+        RenderSystem rsd0 = sm.getRenderSystem();
+        TextureState stated0 =  (TextureState) rsd0.createRenderState(RenderState.Type.TEXTURE);
+        stated0.setTexture(moonRock);
+        ball1Entity.setRenderState(stated0);
+        ball1Node.yaw(Degreef.createFrom(180.0f));
 
     	Entity groundEntity = sm.createEntity(GROUND_E, "cube.obj");
     	groundNode = rootNode.createChildSceneNode(GROUND_N);
@@ -190,6 +198,7 @@ public class BeantasticGame extends VariableFrameRateGame {
         
 		//Creating the player node to add in the game, upgrade from last only entity approach
 		playerObjectNode = gameWorldObjectsNode.createChildSceneNode("PlayerNode");
+		
         //Creating a player
         //Entity playerEntity = sm.createEntity("myPlayer", "astro.obj");
         //playerEntity.setPrimitive(Primitive.TRIANGLES);
@@ -197,6 +206,7 @@ public class BeantasticGame extends VariableFrameRateGame {
         playerNode = playerObjectNode.createChildSceneNode(playerEntity.getName() + "Node");
         playerNode.attachObject(playerEntity);
         playerNode.setLocalScale(.06f, .06f, .06f);
+        
         //player texture
         TextureManager tmd1 = eng.getTextureManager();
         Texture assetd1 = tmd1.getAssetByPath("astroTex.png");
@@ -210,6 +220,7 @@ public class BeantasticGame extends VariableFrameRateGame {
         playerEntity.loadAnimation("walk", "walk2.rka");
         //Idle is not used currently
         //playerEntity.loadAnimation("idle", "idle.rka");
+        
         //npc
         SkeletalEntity npcEntity = sm.createSkeletalEntity("npc", "astroRig.rkm", "astro.rks");
         Texture texNpc = sm.getTextureManager().getAssetByPath("npcTex.png");
@@ -222,7 +233,8 @@ public class BeantasticGame extends VariableFrameRateGame {
         npcNode.scale(.2f, .2f, .2f);
         npcNode.translate(-3f, .5f, -5f);
         npcEntity.loadAnimation("idle", "idle.rka");
-    	  npcEntity.playAnimation("idle", 1.5f, LOOP, 0);
+    	npcEntity.playAnimation("idle", 1.5f, LOOP, 0);
+    	  
         //spaceship----
 		shipObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("shipNode");
         Entity shipEntity = sm.createEntity("myShip", "spaceship.obj");
@@ -860,7 +872,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     	
     }
     
-    
 	//*****end of sound Functionalities*****
+    
 }
 
