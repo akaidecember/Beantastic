@@ -41,6 +41,7 @@ import net.java.games.input.Controller;
 import net.java.games.input.Event;
 import ray.audio.*;
 import com.jogamp.openal.ALFactory;
+import java.util.Random;
 
 //Class declaration for BeantasticGame
 public class BeantasticGame extends VariableFrameRateGame {
@@ -49,6 +50,12 @@ public class BeantasticGame extends VariableFrameRateGame {
 	float elapsTime = 0.0f;
 	String elapsTimeStr, inputName, hud;
     int elapsTimeSec, counter = 0;
+    Random randomNumber = new Random();
+    
+    //Variables to limit the number of certain game objects for the game
+    final int maxCrystal = 10;
+    final int maxOre = 10;
+    final int maxRocks = 75;
     
     //Private variables for the class BeantasticGame-----------------------------------------------------------------------------------------------------------------
     private InputManager im;
@@ -56,7 +63,8 @@ public class BeantasticGame extends VariableFrameRateGame {
     private Action moveForwardAction, moveBackwardAction, moveLeftAction, moveRightAction, moveCameraAction, moveDirectionAction, moveUpDownAction, rotateRightA, rotateLeftA, colorA, rotateAction, rotatePlayerAction;
     public SceneNode cameraNode;
 	private SceneNode gameWorldObjectsNode;
-	private SceneNode playerObjectNode, manualObjectsNode, shipObjectNode, oreObjectNode, crystalObjectNode, npcObjectNode;
+	private SceneNode playerObjectNode, manualObjectsNode, shipObjectNode, npcObjectNode;
+	private ArrayList<SceneNode> oreObjectList = new ArrayList<SceneNode>(), crystalObjectList = new ArrayList<SceneNode>(), rockObjectList = new ArrayList<SceneNode>();
     private Camera3pController playerController;	
     private static final String SKYBOX_NAME = "SkyBox";
     private boolean skyBoxVisible = true;
@@ -87,7 +95,8 @@ public class BeantasticGame extends VariableFrameRateGame {
 	
     //Public variables for the class BeantasticGame------------------------------------------------------------------------------------------------------------------
     public Camera camera;
-    public SceneNode playerNode, shipNode, oreNode, crystalNode, npcNode;									
+    public SceneNode playerNode, shipNode, npcNode;		
+    public ArrayList<SceneNode> oreNodeList = new ArrayList<SceneNode>(), crystalNodeList = new ArrayList<SceneNode>(), rockNodeList = new ArrayList<SceneNode>();
 
     //Protected Variables--------------------------------------------------------------------------------------------------------------------------------------------
     
@@ -252,26 +261,90 @@ public class BeantasticGame extends VariableFrameRateGame {
         shipS.setTexture(shipA);
         shipEntity.setRenderState(shipS);
         
-        //ores----
-		oreObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("oreNode");
-        Entity oreEntity = sm.createEntity("myOre", "ore.obj");
-        oreEntity.setPrimitive(Primitive.TRIANGLES);
-        oreNode = oreObjectNode.createChildSceneNode(oreEntity.getName() + "Node");
-        oreNode.attachObject(oreEntity);
-        oreNode.setLocalPosition(-5, 0, -5);
-        oreNode.setLocalScale(0.05f, 0.05f, 0.05f);
-        RotationController rcOre = new RotationController(Vector3f.createUnitVectorY(), .1f);						//Rotation for the ore model in the game
-        rcOre.addNode(oreNode);
-        sm.addController(rcOre);
+        //Setting ores objects for the game world
+        for(int i = 0; i < maxOre; i++) {
         
-        //crystals----
-		crystalObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("crystalNode");
-        Entity crystalEntity = sm.createEntity("myCrystal", "crystal.obj");
-        crystalEntity.setPrimitive(Primitive.TRIANGLES);
-        crystalNode = crystalObjectNode.createChildSceneNode(crystalEntity.getName() + "Node");
-        crystalNode.attachObject(crystalEntity);
-        crystalNode.setLocalPosition(-3, -0.6f, -3);
-        crystalNode.setLocalScale(0.1f, 0.1f, 0.1f);
+        	SceneNode tempOreObjectNode, tempOreNode;
+	   		tempOreObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("oreNode" + i);
+	   		Entity oreEntity = sm.createEntity("myOre" + i, "ore.obj");
+	   		oreEntity.setPrimitive(Primitive.TRIANGLES); 
+	   		tempOreNode = tempOreObjectNode.createChildSceneNode(oreEntity.getName() + "Node");
+	   		tempOreNode.attachObject(oreEntity);
+	   		tempOreNode.setLocalScale(0.05f, 0.05f, 0.05f); 
+	   		tempOreNode.setLocalPosition(randomNumber.nextInt(100)-50,-.6f, randomNumber.nextInt(100)-50);			//Set random position
+	   		
+	   		//Setting the rotation controller
+	   		RotationController rcOre = new RotationController(Vector3f.createUnitVectorY(), .1f); 												//Rotation for the ore model in the game 
+	   		rcOre.addNode(tempOreNode); 
+	   		sm.addController(rcOre);
+	   		
+	   		//Filling the respective arrays
+	   		oreObjectList.add(tempOreObjectNode);
+	   		oreNodeList.add(tempOreNode);
+        	
+        }
+        
+        //Setting crystal objects for the game world
+        for(int i = 0; i < maxCrystal; i++) {
+        
+        	SceneNode tempCrystalObjectNode, tempCrystalNode;
+    		tempCrystalObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("crystalNode" + i);
+            Entity crystalEntity = sm.createEntity("myCrystal" + i, "crystal.obj");
+            crystalEntity.setPrimitive(Primitive.TRIANGLES);
+            tempCrystalNode = tempCrystalObjectNode.createChildSceneNode(crystalEntity.getName() + "Node");
+            tempCrystalNode.attachObject(crystalEntity);
+            tempCrystalNode.setLocalPosition(randomNumber.nextInt(100)-50,-.6f, randomNumber.nextInt(100)-50);
+            tempCrystalNode.setLocalScale(0.3f, 0.3f, 0.3f);
+	   		
+	   		//Filling the respective arrays
+	   		crystalObjectList.add(tempCrystalObjectNode);
+	   		crystalNodeList.add(tempCrystalNode);
+        	
+        }
+        
+        //Setting Rocks objects for the game world
+        for(int i = 0; i < maxRocks; i++) {
+        
+        	int smallCounter = 0, mediumCounter = 0, largeCounter = 0;
+        	SceneNode tempRockObjectNode, tempRockNode;
+	   		tempRockObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("rockNode" + i);
+	   		Entity rockEntity = sm.createEntity("myRock" + i, "rock.obj");
+	   		rockEntity.setPrimitive(Primitive.TRIANGLES); 
+	   		tempRockNode = tempRockObjectNode.createChildSceneNode(rockEntity.getName() + "Node");
+	   		tempRockNode.attachObject(rockEntity);
+	   		if(smallCounter <= 25 && smallCounter + mediumCounter + largeCounter != 75) {
+	   			
+	   			tempRockNode.setLocalScale(0.08f, 0.08f, 0.08f); 
+	   			smallCounter++;
+	   			
+	   		}
+	   		else if(mediumCounter <= 25 && smallCounter + mediumCounter + largeCounter != 75) {
+	   			
+	   			tempRockNode.setLocalScale( 0.1f, 0.1f, 0.1f);
+	   			mediumCounter++;
+	   			
+	   		}
+	   		else if(smallCounter + mediumCounter + largeCounter != 75){
+	   			
+	   			tempRockNode.setLocalScale(0.5f, 0.5f, 0.5f);
+	   			largeCounter++;
+	   			
+	   		}
+	   		
+	   		tempRockNode.setLocalPosition(randomNumber.nextInt(100)-50, -0.8f, randomNumber.nextInt(100)-50);			//Set random position
+	   		
+	    	TextureManager texRockTemp = eng.getTextureManager();
+	    	Texture moonRockTemp = texRockTemp.getAssetByPath("OldMoon.jpg");
+	        RenderSystem rsd = sm.getRenderSystem();
+	        TextureState stated =  (TextureState) rsd.createRenderState(RenderState.Type.TEXTURE);
+	        stated.setTexture(moonRockTemp);
+	        rockEntity.setRenderState(stated);
+	        
+	   		//Filling the respective arrays
+	   		rockObjectList.add(tempRockObjectNode);
+	   		rockNodeList.add(tempRockNode);
+        	
+        }
         
         // Set up Lights----
         sm.getAmbientLight().setIntensity(new Color(.3f, .3f, .3f));
@@ -751,7 +824,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 		//animations
 		SkeletalEntity playerEntity = (SkeletalEntity) engine.getSceneManager().getEntity("myPlayer");
     	playerEntity.update();
-      SkeletalEntity npcEntity = (SkeletalEntity) engine.getSceneManager().getEntity("npc");
+    	SkeletalEntity npcEntity = (SkeletalEntity) engine.getSceneManager().getEntity("npc");
     	npcEntity.update();
 		if(!walkB){
     		doTheWalk();
@@ -770,6 +843,9 @@ public class BeantasticGame extends VariableFrameRateGame {
 		
 		//Update the input manager with elapsed time
 		im.update(elapsTime);	
+		
+		//Printing out the position of the player in the world to the console
+		System.out.println(playerNode.getWorldPosition().toString());
 		
 	}
     
