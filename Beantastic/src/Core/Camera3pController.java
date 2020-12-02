@@ -28,7 +28,7 @@ public class Camera3pController {
 		playerNode = newPlayerNode;
 		cameraAz = 225.0f;
 		//cameraAz = 45.0f;
-		cameraElevation = 30.0f;
+		cameraElevation = 10.0f;
 		radius = 2.0f;
 		worldVector = Vector3f.createFrom(0.0f, 1.0f, 0.0f);
 		setUpInput(im, newInputDeviceName);

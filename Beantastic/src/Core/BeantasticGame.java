@@ -53,9 +53,9 @@ public class BeantasticGame extends VariableFrameRateGame {
     Random randomNumber = new Random();
     
     //Variables to limit the number of certain game objects for the game
-    final int maxCrystal = 10;
-    final int maxOre = 10;
-    final int maxRocks = 75;
+    final static int maxCrystal = 10;
+    final static int maxOre = 10;
+    final static int maxRocks = 75;
     
     //Private variables for the class BeantasticGame-----------------------------------------------------------------------------------------------------------------
     private InputManager im;
@@ -837,7 +837,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 		SceneManager sm = engine.getSceneManager();
 		SceneNode playerNode = sm.getSceneNode("myPlayerNode"), shipNode = sm.getSceneNode("myShipNode");		
 		//stepSound.setLocation(tempNode.getWorldPosition());
-		bgSound.setLocation(playerNode.getWorldPosition());
+		//bgSound.setLocation(playerNode.getWorldPosition());
 		sparkSound.setLocation(shipNode.getWorldPosition());
 		setEarParameters(sm);
 		
@@ -922,9 +922,9 @@ public class BeantasticGame extends VariableFrameRateGame {
 		sparkSound.setRollOff(10.0f);
     	
     	//Attaching the sounds to the player
-    	SceneNode playerNode = sm.getSceneNode("myPlayerNode");
+    	//SceneNode playerNode = sm.getSceneNode("myPlayerNode");
     	//stepSound.setLocation(playerNode.getWorldPosition());
-    	bgSound.setLocation(playerNode.getWorldPosition());
+    	//bgSound.setLocation(playerNode.getWorldPosition());
     	
     	//Attaching the sounds to the space ship
     	SceneNode spaceShip = sm.getSceneNode("myShipNode");
