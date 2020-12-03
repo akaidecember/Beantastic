@@ -971,12 +971,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 		sparkSound.setMaxDistance(2.0f);
 		sparkSound.setMinDistance(0.5f); 
 		sparkSound.setRollOff(10.0f);
-    	
-    	//Attaching the sounds to the player
-    	//SceneNode playerNode = sm.getSceneNode("myPlayerNode");
-    	//stepSound.setLocation(playerNode.getWorldPosition());
-    	//bgSound.setLocation(playerNode.getWorldPosition());
-    	
+        	
     	//Attaching the sounds to the space ship
     	SceneNode spaceShip = sm.getSceneNode("myShipNode");
     	sparkSound.setLocation(spaceShip.getWorldPosition());
