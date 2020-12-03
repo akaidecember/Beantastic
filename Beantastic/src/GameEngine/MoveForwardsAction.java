@@ -24,7 +24,7 @@ public class MoveForwardsAction extends AbstractInputAction {
        	
         System.out.println("Forward Action riding the player");
         player.moveForward(0.15f);
-
+        myGame.updateVerticalPosition();
         
     }
     

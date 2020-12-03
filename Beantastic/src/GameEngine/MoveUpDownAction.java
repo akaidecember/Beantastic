@@ -22,11 +22,13 @@ public class MoveUpDownAction extends AbstractInputAction {
 		
 		// move forward
 		if (e.getValue() < -0.7f) 
-			player.moveForward(0.05f);
+			player.moveForward(0.1f);
 			
 		// move backward
 		if (e.getValue() > 0.7f) 
-			player.moveBackward(0.05f);
+			player.moveBackward(0.1f);
+		
+		game.updateVerticalPosition();
 		
 	}
 	

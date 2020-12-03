@@ -429,6 +429,8 @@ public class BeantasticGame extends VariableFrameRateGame {
 		SceneNode tessN = (SceneNode) sm.getRootSceneNode().createChildNode("TessN");
 		tessN.attachObject(tessE);	
 		tessN.scale(100, 31, 100);
+		tessN.translate(Vector3f.createFrom(-6.2f, -2.2f, 2.7f));
+		tessN.yaw(Degreef.createFrom(37.2f));
 		tessN.setLocalPosition(-1, -1, -5);
 		tessE.setHeightMap(this.getEngine(), "tn.png");
 		tessE.setTexture(this.getEngine(), "moon.jpeg");
@@ -572,7 +574,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     	//Initialization action gamepad
     	//"MoveForward-sAction.java " is not used
     	moveForwardAction = new MoveForwardAction(playerNode, protClient, this, true);  
-        moveBackwardAction = new MoveBackwardAction(playerNode);						
+        moveBackwardAction = new MoveBackwardAction(playerNode, this);						
         moveLeftAction = new MoveLeftAction(playerNode);								
         moveRightAction = new MoveRightAction(playerNode);	
         rotateRightA = new RotateRightAction(playerNode, camera);
@@ -879,6 +881,22 @@ public class BeantasticGame extends VariableFrameRateGame {
 		
 		//Printing out the position of the player in the world to the console
 		System.out.println(playerNode.getWorldPosition().toString());
+		
+	}
+    
+    //Function to update the player height according to the terrain
+	public void updateVerticalPosition() {
+		// TODO Auto-generated method stub
+		
+		//Getting and setting the info. variables
+		SceneNode playerNode = this.getEngine().getSceneManager().getSceneNode("PlayerNode");
+		SceneNode tessNode = this.getEngine().getSceneManager().getSceneNode("TessN");
+		Tessellation tessEntity = ((Tessellation)tessNode.getAttachedObject("tessE"));
+		Vector3 playerPosition = playerNode.getWorldPosition();
+		Vector3 localAvatarPosition = playerNode.getLocalPosition();
+		Vector3 newPlayerPosition = Vector3f.createFrom(localAvatarPosition.x(), tessEntity.getWorldHeight(playerPosition.x(), playerPosition.z()), localAvatarPosition.z());
+
+		playerNode.setLocalPosition(newPlayerPosition);																								//Updating the player location
 		
 	}
     

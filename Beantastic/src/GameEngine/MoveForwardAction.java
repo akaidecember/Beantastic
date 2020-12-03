@@ -27,6 +27,7 @@ public class MoveForwardAction extends AbstractInputAction {
 			dN.moveForward(1f);
 		else
 			dN.moveForward(0.1f);
+		game.updateVerticalPosition();
 		protClient.sendMoveMessage(dN.getWorldPosition(), "forward");
 		game.setWalkTrue(true);
 	}

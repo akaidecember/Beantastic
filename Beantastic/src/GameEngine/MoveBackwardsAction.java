@@ -23,8 +23,8 @@ public class MoveBackwardsAction extends AbstractInputAction {
         
         //Console output
         System.out.println("Backwards Action riding the player");
-        player.moveForward(-0.15f);
-
+        player.moveForward(-0.1f);
+        myGame.updateVerticalPosition();
         
     }
 
