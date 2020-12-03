@@ -23,7 +23,10 @@ public class MoveForwardAction extends AbstractInputAction {
 	}
 	@Override
 	public void performAction(float a, Event e) {
-		dN.moveForward(0.05f);
+		if(game.debugCamera == true)
+			dN.moveForward(1f);
+		else
+			dN.moveForward(0.1f);
 		protClient.sendMoveMessage(dN.getWorldPosition(), "forward");
 		game.setWalkTrue(true);
 	}

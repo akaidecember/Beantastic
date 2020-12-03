@@ -63,7 +63,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     private Action moveForwardAction, moveBackwardAction, moveLeftAction, moveRightAction, moveCameraAction, moveDirectionAction, moveUpDownAction, rotateRightA, rotateLeftA, colorA, rotateAction, rotatePlayerAction;
     public SceneNode cameraNode;
 	private SceneNode gameWorldObjectsNode;
-	private SceneNode playerObjectNode, manualObjectsNode, shipObjectNode, npcObjectNode;
+	private SceneNode playerObjectNode, manualObjectsNode, shipObjectNode, npcObjectNode, planetNode;
 	private ArrayList<SceneNode> oreObjectList = new ArrayList<SceneNode>(), crystalObjectList = new ArrayList<SceneNode>(), rockObjectList = new ArrayList<SceneNode>();
     private Camera3pController playerController;	
     private static final String SKYBOX_NAME = "SkyBox";
@@ -97,7 +97,15 @@ public class BeantasticGame extends VariableFrameRateGame {
     public Camera camera;
     public SceneNode playerNode, shipNode, npcNode;		
     public ArrayList<SceneNode> oreNodeList = new ArrayList<SceneNode>(), crystalNodeList = new ArrayList<SceneNode>(), rockNodeList = new ArrayList<SceneNode>();
+    
+    //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    //Debug variables for the game developer to make things easier
+    //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
+    public boolean debugCamera = false;																					//Sets the player speed superman levels for easier to get from one place to another
+    
+    //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    
     //Protected Variables--------------------------------------------------------------------------------------------------------------------------------------------
     
     //script variables----
@@ -345,6 +353,31 @@ public class BeantasticGame extends VariableFrameRateGame {
 	   		rockNodeList.add(tempRockNode);
         	
         }
+        
+        //Setting a planet for the looks of the game
+        
+		// Planet----
+		planetNode = gameWorldObjectsNode.createChildSceneNode("planetNode");
+		Entity planetEntity = sm.createEntity("planetEntity", "earth.obj");
+		planetEntity.setPrimitive(Primitive.TRIANGLES);
+
+		TextureManager planetTexture = eng.getTextureManager();
+		Texture redTexture = planetTexture.getAssetByPath("sun.jpg");
+		RenderSystem rsPlanet = sm.getRenderSystem();
+		TextureState statePlanet = (TextureState)rsPlanet.createRenderState(RenderState.Type.TEXTURE);
+		statePlanet.setTexture(redTexture);
+		planetEntity.setRenderState(statePlanet);
+		
+		SceneNode planetChildNode = planetNode.createChildSceneNode(planetEntity.getName() + "Node");
+		planetChildNode.setLocalPosition(500f,125f, -225f);
+		planetChildNode.setLocalScale(80f, 80f, 80f);
+		planetChildNode.attachObject(planetEntity);
+
+		// Planet 3's rotation
+		RotationController rcPlanet = new RotationController(Vector3f.createUnitVectorY(), 0.005f);
+		rcPlanet.addNode(planetChildNode);
+		sm.addController(rcPlanet);
+
         
         // Set up Lights----
         sm.getAmbientLight().setIntensity(new Color(.3f, .3f, .3f));
