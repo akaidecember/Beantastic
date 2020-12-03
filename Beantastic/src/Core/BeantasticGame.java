@@ -844,16 +844,24 @@ public class BeantasticGame extends VariableFrameRateGame {
 		im.update(elapsTime);	
 		playerController.updateCameraPosition();
 		processNetworking(elapsTime);
+		
 		//physics
 		if(running) {
+			
 			Matrix4 mat;
 			physicsEng.update(elapsTime);
+			
 			for(SceneNode s: engine.getSceneManager().getSceneNodes()){
+				
 				if(s.getPhysicsObject()!=null) {
+					
 					mat = Matrix4f.createFrom(toFloatArray(s.getPhysicsObject().getTransform()));
 					s.setLocalPosition(mat.value(0, 3), mat.value(1, 3), mat.value(2, 3));
+					
 				}
+				
 			}
+			
 		}
 		
 		//animations
@@ -861,12 +869,10 @@ public class BeantasticGame extends VariableFrameRateGame {
     	playerEntity.update();
     	SkeletalEntity npcEntity = (SkeletalEntity) engine.getSceneManager().getEntity("npc");
     	npcEntity.update();
-		if(!walkB){
+		if(!walkB)
     		doTheWalk();
-        }
-        else{
+        else
         	setWalkFalse();
-        }
 		
 		//Updating the sound variables with each gameEngine cycle
 		SceneManager sm = engine.getSceneManager();
@@ -895,7 +901,6 @@ public class BeantasticGame extends VariableFrameRateGame {
 		Vector3 playerPosition = playerNode.getWorldPosition();
 		Vector3 localAvatarPosition = playerNode.getLocalPosition();
 		Vector3 newPlayerPosition = Vector3f.createFrom(localAvatarPosition.x(), tessEntity.getWorldHeight(playerPosition.x(), playerPosition.z()), localAvatarPosition.z());
-
 		playerNode.setLocalPosition(newPlayerPosition);																								//Updating the player location
 		
 	}
