@@ -279,7 +279,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 	   		tempOreNode = tempOreObjectNode.createChildSceneNode(oreEntity.getName() + "Node");
 	   		tempOreNode.attachObject(oreEntity);
 	   		tempOreNode.setLocalScale(0.05f, 0.05f, 0.05f); 
-	   		tempOreNode.setLocalPosition(randomNumber.nextInt(100)-50,-.6f, randomNumber.nextInt(100)-50);			//Set random position
+	   		tempOreNode.setLocalPosition(randomNumber.nextInt(100)-50, -.6f, randomNumber.nextInt(100)-50);			//Set random position
 	   		
 	   		//Setting the rotation controller
 	   		RotationController rcOre = new RotationController(Vector3f.createUnitVectorY(), .1f); 												//Rotation for the ore model in the game 
@@ -864,7 +864,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 			
 		}
 		
-		//animations
+		//animations----
 		SkeletalEntity playerEntity = (SkeletalEntity) engine.getSceneManager().getEntity("myPlayer");
     	playerEntity.update();
     	SkeletalEntity npcEntity = (SkeletalEntity) engine.getSceneManager().getEntity("npc");
@@ -890,9 +890,8 @@ public class BeantasticGame extends VariableFrameRateGame {
 		
 	}
     
-    //Function to update the player height according to the terrain
+    //Function to update the player height according to the terrain----
 	public void updateVerticalPosition() {
-		// TODO Auto-generated method stub
 		
 		//Getting and setting the info. variables
 		SceneNode playerNode = this.getEngine().getSceneManager().getSceneNode("PlayerNode");
@@ -901,7 +900,10 @@ public class BeantasticGame extends VariableFrameRateGame {
 		Vector3 playerPosition = playerNode.getWorldPosition();
 		Vector3 localAvatarPosition = playerNode.getLocalPosition();
 		Vector3 newPlayerPosition = Vector3f.createFrom(localAvatarPosition.x(), tessEntity.getWorldHeight(playerPosition.x(), playerPosition.z()), localAvatarPosition.z());
-		playerNode.setLocalPosition(newPlayerPosition);																								//Updating the player location
+		
+		System.out.println("Tessellation height at player position:" + tessEntity.getWorldHeight(playerPosition.x(), playerPosition.z()));
+		
+		//playerNode.setLocalPosition(newPlayerPosition);																								//Updating the player location
 		
 	}
     
