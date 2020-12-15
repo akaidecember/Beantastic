@@ -9,15 +9,15 @@ import ray.networking.server.IClientInfo;
 
 public class GameServerUDP extends GameConnectionServer<UUID>{
 	
-
 	public GameServerUDP(int localPort, ProtocolType protocolType) throws IOException {
 		super(localPort, ProtocolType.UDP);
-		// TODO Auto-generated constructor stub
 	}
 	@Override
 	public void processPacket(Object o, InetAddress senderIP, int sndPort) {
 		String message = (String) o;
 		String[] msgTokens = message.split(",");
+		
+		System.out.println(o);
 		if(msgTokens.length>0) {
 			if(msgTokens[0].compareTo("join")==0) {
 				try {
@@ -32,19 +32,20 @@ public class GameServerUDP extends GameConnectionServer<UUID>{
 					e.printStackTrace();
 				}
 			}
-			if(msgTokens[0].compareTo("bye") == 0)
-			{
-				UUID clientID = UUID.fromString(msgTokens[1]);
-				sendByeMessages(clientID);
-				removeClient(clientID);
-			}
 			if(msgTokens[0].compareTo("create")==0) {
 				UUID clientID = UUID.fromString(msgTokens[1]);
 				String[] pos = { msgTokens[2], msgTokens[3], msgTokens[4]};
 				sendCreateMessages(clientID, pos);
 				sendWantsDetailsMessages(clientID);
-				removeClient(clientID);
+				//removeClient(clientID);
 				System.out.println("CREATE");
+			}
+			if(msgTokens[0].compareTo("bye") == 0)
+			{
+				UUID clientID = UUID.fromString(msgTokens[1]);
+				sendByeMessages(clientID);
+				removeClient(clientID);
+				System.out.println("BYE");
 			}
 			if(msgTokens[0].compareTo("dsfr")==0) {
 				UUID clientID = UUID.fromString(msgTokens[1]);
@@ -52,6 +53,24 @@ public class GameServerUDP extends GameConnectionServer<UUID>{
 				sendDetailsMessage(clientID, pos);
 			}
 			if(msgTokens[0].compareTo("move")==0) {
+				UUID clientID = UUID.fromString(msgTokens[1]);
+				String[] position = {msgTokens[2], msgTokens[3], msgTokens[4]};
+				String command = msgTokens[5];
+				sendMoveMessages(clientID, position, command);
+			}
+			
+			// NPC
+			if(msgTokens[0].compareTo("createNPC")==0) {
+				int npcID = (int)Math.random();
+				UUID clientID = UUID.fromString(msgTokens[1]);
+				String[] pos = {msgTokens[2], msgTokens[3], msgTokens[4]};
+				sendCreateNPC(clientID, npcID, pos);
+				
+			}
+			if(msgTokens[0].compareTo("needNPC")==0) {
+				//sendCheckForAvatarNear();
+			}
+			if(msgTokens[0].compareTo("collide")==0) {
 				
 			}
 		}
@@ -127,5 +146,44 @@ public class GameServerUDP extends GameConnectionServer<UUID>{
 			e.printStackTrace();
 		}
 	}
-	// java -Dsun.java2d.d3d=false -Dsun.java2d.uiScale=1 NetworkingServer/ip address 9000 UDP
+	// NPC
+	public void sendNPCinfo(NPCcontroller npcCtrl) {
+		for(int i =0; i<npcCtrl.getNumOfNPCs(); i++)
+		{
+			try
+			{
+				String message = new String("mnpc," + Integer.toString(i));
+				message += "," + (npcCtrl.getNPC(i)).getX();
+				message += "," + (npcCtrl.getNPC(i)).getY();
+				message += "," + (npcCtrl.getNPC(i)).getZ();
+				sendPacketToAll(message);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	private void sendCreateNPC(UUID clientID, int id, String[] position) {
+		try {
+			String message = new String("npc," + id);
+			message += "," + position[0];
+			message += "," + position[1];
+			message += "," + position[2];
+			sendPacket(message, clientID);
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+	public void sendCheckForAvatarNear() {
+		//npc.start();
+		//AvatarNear = new AvatarNear(this, npc, false);
+		try {
+			String message = new String("npcnear");
+			sendPacketToAll(message);
+		}
+		catch(IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
 }

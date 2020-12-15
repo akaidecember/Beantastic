@@ -4,14 +4,15 @@ import java.util.UUID;
 
 import ray.rage.scene.Entity;
 import ray.rage.scene.SceneNode;
+import ray.rage.scene.SkeletalEntity;
 import ray.rml.Vector3;
 
 public class GhostAvatar {
 	private UUID id;
 	private SceneNode node;
+	private SkeletalEntity SE;
 	private Entity entity;
 	public GhostAvatar(UUID ghostID, Vector3 ghostPosition) {
-		// TODO Auto-generated constructor stub
 		this.id = ghostID;
 	}
 	public void setNode(SceneNode ghostN) {
@@ -33,8 +34,12 @@ public class GhostAvatar {
 		return node;
 	}
 	public UUID getID() {
-		// TODO Auto-generated method stub
 		return id;
 	}
-
+	public void setLocalPosition(float f, float g, float h) {
+		this.node.setLocalPosition(f, g, h);
+	}
+	public void setSE(SkeletalEntity ghostSE) {
+		SE = ghostSE;
+	}
 }
