@@ -256,6 +256,18 @@ public class BeantasticGame extends VariableFrameRateGame {
         //Idle is not used currently
         //playerEntity.loadAnimation("idle", "idle.rka");
         
+		//Terrain
+		Tessellation tessE = sm.createTessellation("tessE", 6);
+		tessE.setSubdivisions(32f);
+		SceneNode tessN = (SceneNode) sm.getRootSceneNode().createChildNode("TessN");
+		tessN.attachObject(tessE);	
+		tessN.scale(100, 300, 100);
+		tessN.translate(Vector3f.createFrom(-6.2f, -2.2f, 2.7f));
+		tessN.yaw(Degreef.createFrom(37.2f));
+		tessN.setLocalPosition(-1, -1, -5);
+		tessE.setHeightMap(this.getEngine(), "testTerr.png");
+		tessE.setTexture(this.getEngine(), "moon.jpeg");
+        
         //npc building
         SkeletalEntity npcEntity = sm.createSkeletalEntity("npc", "astroRig.rkm", "astro.rks");
         Texture texNpc = sm.getTextureManager().getAssetByPath("npcTex.png");
