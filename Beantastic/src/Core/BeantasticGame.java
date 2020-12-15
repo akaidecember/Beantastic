@@ -208,6 +208,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 
     	im = new GenericInputManager();		
     	setupNetworking();
+    	
     	//Initializing the input manager
     	getInput();																									//Determine the type of input device
         gameWorldObjectsNode = sm.getRootSceneNode().createChildSceneNode("GameWorldObjectsNode");			        //Initializing the gameWorldObjects Scene Node
@@ -238,6 +239,18 @@ public class BeantasticGame extends VariableFrameRateGame {
         //Idle is not used currently
         //playerEntity.loadAnimation("idle", "idle.rka");
         
+		//Terrain
+		Tessellation tessE = sm.createTessellation("tessE", 6);
+		tessE.setSubdivisions(32f);
+		SceneNode tessN = (SceneNode) sm.getRootSceneNode().createChildNode("TessN");
+		tessN.attachObject(tessE);	
+		tessN.scale(100, 300, 100);
+		tessN.translate(Vector3f.createFrom(-6.2f, -2.2f, 2.7f));
+		tessN.yaw(Degreef.createFrom(37.2f));
+		tessN.setLocalPosition(-1, -1, -5);
+		tessE.setHeightMap(this.getEngine(), "testTerr.png");
+		tessE.setTexture(this.getEngine(), "moon.jpeg");
+        
         //npc
         SkeletalEntity npcEntity = sm.createSkeletalEntity("npc", "astroRig.rkm", "astro.rks");
         Texture texNpc = sm.getTextureManager().getAssetByPath("npcTex.png");
@@ -251,6 +264,9 @@ public class BeantasticGame extends VariableFrameRateGame {
         npcNode.translate(-3f, .5f, -5f);
         npcEntity.loadAnimation("idle", "idle.rka");
     	npcEntity.playAnimation("idle", 1.5f, LOOP, 0);
+    	
+   		//update the vertical position of the objects acc. to the terrain ***FILL IN THE INTEGER_TYPE VALUE FOR TYPE OF OBJECT YOU WANT TO UPDATE 1:npc, 2:spaceship, 3:ore, 4:crystal, 5:rock
+   		updateObjectVerticalPosition(npcNode, 1);
     	  
         //spaceship----
 		shipObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("shipNode");
@@ -261,6 +277,9 @@ public class BeantasticGame extends VariableFrameRateGame {
         shipNode.setLocalPosition(0, -0.6f, 0);
     	shipNode.setLocalScale(2f, 2f, 2f);
         
+   		//update the vertical position of the objects acc. to the terrain ***FILL IN THE INTEGER_TYPE VALUE FOR TYPE OF OBJECT YOU WANT TO UPDATE 1:npc, 2:spaceship, 3:ore, 4:crystal, 5:rock
+   		updateObjectVerticalPosition(shipNode, 2);
+   		
         TextureManager shipTM = eng.getTextureManager();
         //change cube.png is spaceship texture
         Texture shipA = shipTM.getAssetByPath("cube.png");
@@ -289,8 +308,12 @@ public class BeantasticGame extends VariableFrameRateGame {
 	   		//Filling the respective arrays
 	   		oreObjectList.add(tempOreObjectNode);
 	   		oreNodeList.add(tempOreNode);
+	   		
+	   		//update the vertical position of the objects acc. to the terrain ***FILL IN THE INTEGER_TYPE VALUE FOR TYPE OF OBJECT YOU WANT TO UPDATE 1:npc, 2:spaceship, 3:ore, 4:crystal, 5:rock
+	   		updateObjectVerticalPosition(tempOreNode, 3);
         	
         }
+        
         
         //Setting crystal objects for the game world
         for(int i = 0; i < maxCrystal; i++) {
@@ -307,6 +330,9 @@ public class BeantasticGame extends VariableFrameRateGame {
 	   		//Filling the respective arrays
 	   		crystalObjectList.add(tempCrystalObjectNode);
 	   		crystalNodeList.add(tempCrystalNode);
+	   		
+	   		//update the vertical position of the objects acc. to the terrain ***FILL IN THE INTEGER_TYPE VALUE FOR TYPE OF OBJECT YOU WANT TO UPDATE 1:npc, 2:spaceship, 3:ore, 4:crystal, 5:rock
+	   		updateObjectVerticalPosition(tempCrystalNode, 4);
         	
         }
         
@@ -351,6 +377,9 @@ public class BeantasticGame extends VariableFrameRateGame {
 	   		//Filling the respective arrays
 	   		rockObjectList.add(tempRockObjectNode);
 	   		rockNodeList.add(tempRockNode);
+	   		
+	   		//update the vertical position of the objects acc. to the terrain ***FILL IN THE INTEGER_TYPE VALUE FOR TYPE OF OBJECT YOU WANT TO UPDATE 1:npc, 2:spaceship, 3:ore, 4:crystal, 5:rock
+	   		updateObjectVerticalPosition(tempRockNode, 5);
         	
         }
         
@@ -422,19 +451,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 		sb.setTexture(top, SkyBox.Face.TOP);        
 		sb.setTexture(bottom, SkyBox.Face.BOTTOM);        
 		sm.setActiveSkyBox(sb);
-		
-		//Terrain
-		Tessellation tessE = sm.createTessellation("tessE", 6);
-		tessE.setSubdivisions(8f);
-		SceneNode tessN = (SceneNode) sm.getRootSceneNode().createChildNode("TessN");
-		tessN.attachObject(tessE);	
-		tessN.scale(100, 31, 100);
-		tessN.translate(Vector3f.createFrom(-6.2f, -2.2f, 2.7f));
-		tessN.yaw(Degreef.createFrom(37.2f));
-		tessN.setLocalPosition(-1, -1, -5);
-		tessE.setHeightMap(this.getEngine(), "tn.png");
-		tessE.setTexture(this.getEngine(), "moon.jpeg");
-		
+				
 		//TESTING professor's script
 		//Prepare script engine
 		ScriptEngineManager factory = new ScriptEngineManager();
@@ -894,16 +911,41 @@ public class BeantasticGame extends VariableFrameRateGame {
 	public void updateVerticalPosition() {
 		
 		//Getting and setting the info. variables
-		SceneNode playerNode = this.getEngine().getSceneManager().getSceneNode("PlayerNode");
+		SceneNode playerNode = this.getEngine().getSceneManager().getSceneNode("myPlayerNode");
 		SceneNode tessNode = this.getEngine().getSceneManager().getSceneNode("TessN");
 		Tessellation tessEntity = ((Tessellation)tessNode.getAttachedObject("tessE"));
 		Vector3 playerPosition = playerNode.getWorldPosition();
 		Vector3 localAvatarPosition = playerNode.getLocalPosition();
-		Vector3 newPlayerPosition = Vector3f.createFrom(localAvatarPosition.x(), tessEntity.getWorldHeight(playerPosition.x(), playerPosition.z()), localAvatarPosition.z());
-		
+		Vector3 newPlayerPosition = Vector3f.createFrom(localAvatarPosition.x(), tessEntity.getWorldHeight(playerPosition.x(), playerPosition.z()) + 0.5f, localAvatarPosition.z());
 		System.out.println("Tessellation height at player position:" + tessEntity.getWorldHeight(playerPosition.x(), playerPosition.z()));
+		playerNode.setLocalPosition(newPlayerPosition);																								//Updating the player location
 		
-		//playerNode.setLocalPosition(newPlayerPosition);																								//Updating the player location
+	}
+	
+    //Function to update the object height according to the terrain----
+	public void updateObjectVerticalPosition(SceneNode tempNode, int type) {
+		
+		//int types  ==>  1:npc, 2:spaceship, 3:ore, 4:crystal, 5:rock
+		float delta = 0.5f;
+		if(type == 1)
+			delta = 1.5f;
+		else if(type == 2)
+			delta = 0.5f;
+		else if(type ==3)
+			delta = 0.5f;
+		else if(type == 4)
+			delta = 0.16f;
+		else if(type == 5)
+			delta = 0.0f;
+		
+		//Getting and setting the info. variables
+		SceneNode objectNode = tempNode;
+		SceneNode tessNode = this.getEngine().getSceneManager().getSceneNode("TessN");
+		Tessellation tessEntity = ((Tessellation)tessNode.getAttachedObject("tessE"));
+		Vector3 objectPosition = objectNode.getWorldPosition();
+		Vector3 localObjectPosition = objectNode.getLocalPosition();
+		Vector3 newObjectPosition = Vector3f.createFrom(localObjectPosition.x(), tessEntity.getWorldHeight(objectPosition.x(), objectPosition.z()) + delta, localObjectPosition.z());
+		objectNode.setLocalPosition(newObjectPosition);																								//Updating the object location location
 		
 	}
     
