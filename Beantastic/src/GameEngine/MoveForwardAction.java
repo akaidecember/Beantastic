@@ -14,6 +14,7 @@ public class MoveForwardAction extends AbstractInputAction {
 	private SceneNode dN;
 	private ProtocolClient protClient;
 	private boolean a;
+
 	private BeantasticGame game;
 	public MoveForwardAction(SceneNode dolphinN, ProtocolClient p, BeantasticGame g, boolean anim) {
 		dN = dolphinN;
@@ -23,12 +24,16 @@ public class MoveForwardAction extends AbstractInputAction {
 	}
 	@Override
 	public void performAction(float a, Event e) {
+		protClient.sendMoveMessage(dN.getWorldPosition(), "forward");
 		if(game.debugCamera == true)
-			dN.moveForward(1f);
+			dN.moveForward(.5f);
+
 		else
 			dN.moveForward(0.1f);
+		
 		game.updateVerticalPosition();
-		protClient.sendMoveMessage(dN.getWorldPosition(), "forward");
+		//game.updateVertGhostNew();
+		//game.updateVertGhostOld();
 		game.setWalkTrue(true);
 	}
 	

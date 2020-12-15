@@ -10,12 +10,15 @@ import ray.rml.Degreef;
 public class RotateLeftAction extends AbstractInputAction{
 	private SceneNode pN;
 	private Camera camera;
-	public RotateLeftAction(SceneNode playerN, Camera c) {
+	private ProtocolClient protClient;
+	public RotateLeftAction(SceneNode playerN, ProtocolClient p,Camera c) {
 		pN = playerN;
 		camera = c;
+		protClient = p;
 	}
 	@Override
 	public void performAction(float a, Event e) {
+		protClient.sendMoveMessage(pN.getLocalPosition(), "rLeft");
 		Angle rotAmt1 = Degreef.createFrom(5.0f);
 		pN.yaw(rotAmt1);
 

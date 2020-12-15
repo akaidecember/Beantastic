@@ -27,6 +27,7 @@ import ray.rage.scene.controllers.*;
 import ray.rml.*;
 import ray.rage.rendersystem.gl4.GL4RenderSystem;
 import ray.rage.rendersystem.states.*;
+import ray.rage.asset.material.Material;
 import ray.rage.asset.texture.*;
 import ray.input.*;
 import ray.input.action.*;
@@ -41,7 +42,9 @@ import net.java.games.input.Controller;
 import net.java.games.input.Event;
 import ray.audio.*;
 import com.jogamp.openal.ALFactory;
-import java.util.Random;
+
+import java.util.Vector;
+
 
 //Class declaration for BeantasticGame
 public class BeantasticGame extends VariableFrameRateGame {
@@ -55,7 +58,8 @@ public class BeantasticGame extends VariableFrameRateGame {
     //Variables to limit the number of certain game objects for the game
     final static int maxCrystal = 10;
     final static int maxOre = 10;
-    final static int maxRocks = 75;
+    
+    final static int maxRocks = 50;
     
     //Private variables for the class BeantasticGame-----------------------------------------------------------------------------------------------------------------
     private InputManager im;
@@ -76,18 +80,19 @@ public class BeantasticGame extends VariableFrameRateGame {
 	private ProtocolClient protClient;
 	private boolean isClientConnected;
 	private Vector<UUID> gameObjectsToRemove;
+	private boolean ghostCheckN;
     
     //Physics variables
-	private SceneNode ball1Node, ball2Node, groundNode;
+	private SceneNode ball1Node, ball2Node, groundNode, rockNode;
     private SceneNode cameraPositionNode;
     private final static String GROUND_E = "Ground";
     private final static String GROUND_N = "GroundNode";
     private PhysicsEngine physicsEng; 
-    private PhysicsObject ball1PhysObj, ball2PhysObj, gndPlaneP;
+    private PhysicsObject ball1PhysObj, ball2PhysObj, gndPlaneP, rockPhysObj;
     
     //Animation variables
     private boolean running = false;
-    private boolean walkB, idleB;														//Animation
+    private boolean walkB, idleB, walkG2;														//Animation
 	
     //Sound variables
     private IAudioManager audioManager;  
@@ -97,6 +102,10 @@ public class BeantasticGame extends VariableFrameRateGame {
     public Camera camera;
     public SceneNode playerNode, shipNode, npcNode;		
     public ArrayList<SceneNode> oreNodeList = new ArrayList<SceneNode>(), crystalNodeList = new ArrayList<SceneNode>(), rockNodeList = new ArrayList<SceneNode>();
+    
+    //score 
+    private int oresCount;
+    private String winner = "";
     
     //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     //Debug variables for the game developer to make things easier
@@ -112,6 +121,9 @@ public class BeantasticGame extends VariableFrameRateGame {
     protected ScriptEngine jsEngine;
     protected File scriptFile;
     
+    
+    //HUD
+    String dispStr;
     //Constructor for the class BeantasticGame
     public BeantasticGame(String serverAddr, int sPort) {
     	
@@ -123,7 +135,8 @@ public class BeantasticGame extends VariableFrameRateGame {
         
         walkB=false;
         idleB=false;
-        
+        walkG2 = false;
+        oresCount = 0;
     }
     
     //Main function for the game
@@ -157,9 +170,10 @@ public class BeantasticGame extends VariableFrameRateGame {
     
 	@Override
 	protected void setupWindow(RenderSystem rs, GraphicsEnvironment ge) {
-		
 		rs.createRenderWindow(new DisplayMode(1000, 700, 24, 60), false);
+		rs.getRenderWindow().setTitle("Beantastic");
 		
+		//rs.getRenderWindow().setIconImage();
 	}
 
     @Override
@@ -185,6 +199,8 @@ public class BeantasticGame extends VariableFrameRateGame {
     @Override
     protected void setupScene(Engine eng, SceneManager sm) throws IOException {
     	
+    	setupNetworking();
+
     	//physics demonstration
     	SceneNode rootNode = sm.getRootSceneNode();
     	
@@ -194,7 +210,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     	ball1Node.setLocalPosition(0, 2, -2);
     	ball1Node.setLocalScale(0.2f, 0.2f, 0.2f);
     	TextureManager texRock = eng.getTextureManager();
-    	Texture moonRock = texRock.getAssetByPath("OldMoon.jpg");
+    	Texture moonRock = texRock.getAssetByPath("redMoon.jpg");
         RenderSystem rsd0 = sm.getRenderSystem();
         TextureState stated0 =  (TextureState) rsd0.createRenderState(RenderState.Type.TEXTURE);
         stated0.setTexture(moonRock);
@@ -206,25 +222,25 @@ public class BeantasticGame extends VariableFrameRateGame {
     	groundNode.attachObject(groundEntity);
     	groundNode.setLocalPosition(0, -2, -2);
 
-    	im = new GenericInputManager();		
-    	setupNetworking();
-    	
+    	im = new GenericInputManager();
+      //networking call		
     	//Initializing the input manager
     	getInput();																									//Determine the type of input device
         gameWorldObjectsNode = sm.getRootSceneNode().createChildSceneNode("GameWorldObjectsNode");			        //Initializing the gameWorldObjects Scene Node
         manualObjectsNode = gameWorldObjectsNode.createChildSceneNode("ManualObjectsNode");							//Initializing the manualObjects scene node 
         
 		//Creating the player node to add in the game, upgrade from last only entity approach
-		playerObjectNode = gameWorldObjectsNode.createChildSceneNode("PlayerNode");
+		  playerObjectNode = sm.getRootSceneNode().createChildSceneNode("PlayerNode");
 		
         //Creating a player
         //Entity playerEntity = sm.createEntity("myPlayer", "astro.obj");
         //playerEntity.setPrimitive(Primitive.TRIANGLES);
 		SkeletalEntity playerEntity = sm.createSkeletalEntity("myPlayer", "astroRig.rkm", "astro.rks");
+		playerEntity.setPrimitive(Primitive.TRIANGLES);
         playerNode = playerObjectNode.createChildSceneNode(playerEntity.getName() + "Node");
         playerNode.attachObject(playerEntity);
         playerNode.setLocalScale(.06f, .06f, .06f);
-        
+       // playerNode.translate(0,0.5f,0);
         //player texture
         TextureManager tmd1 = eng.getTextureManager();
         Texture assetd1 = tmd1.getAssetByPath("astroTex.png");
@@ -232,26 +248,15 @@ public class BeantasticGame extends VariableFrameRateGame {
         TextureState stated1 =  (TextureState) rsd1.createRenderState(RenderState.Type.TEXTURE);
         stated1.setTexture(assetd1);
         playerEntity.setRenderState(stated1);
-        playerNode.yaw(Degreef.createFrom(180.0f));
+        //playerNode.yaw(Degreef.createFrom(180.0f));
         
         //animations----
         playerEntity.loadAnimation("walk", "walk2.rka");
+        
         //Idle is not used currently
         //playerEntity.loadAnimation("idle", "idle.rka");
         
-		//Terrain
-		Tessellation tessE = sm.createTessellation("tessE", 6);
-		tessE.setSubdivisions(32f);
-		SceneNode tessN = (SceneNode) sm.getRootSceneNode().createChildNode("TessN");
-		tessN.attachObject(tessE);	
-		tessN.scale(100, 300, 100);
-		tessN.translate(Vector3f.createFrom(-6.2f, -2.2f, 2.7f));
-		tessN.yaw(Degreef.createFrom(37.2f));
-		tessN.setLocalPosition(-1, -1, -5);
-		tessE.setHeightMap(this.getEngine(), "testTerr.png");
-		tessE.setTexture(this.getEngine(), "moon.jpeg");
-        
-        //npc
+        //npc building
         SkeletalEntity npcEntity = sm.createSkeletalEntity("npc", "astroRig.rkm", "astro.rks");
         Texture texNpc = sm.getTextureManager().getAssetByPath("npcTex.png");
         TextureState tstateNpc = (TextureState) sm.getRenderSystem().createRenderState(RenderState.Type.TEXTURE);
@@ -260,16 +265,18 @@ public class BeantasticGame extends VariableFrameRateGame {
         npcObjectNode = gameWorldObjectsNode.createChildSceneNode("NpcNode");
         npcNode = npcObjectNode.createChildSceneNode(npcEntity.getName() + "Node");
         npcNode.attachObject(npcEntity);
-        npcNode.scale(.2f, .2f, .2f);
-        npcNode.translate(-3f, .5f, -5f);
+        npcNode.scale(.8f, .8f, .8f);
+        npcNode.translate(-20f, 5.5f, -10f);
         npcEntity.loadAnimation("idle", "idle.rka");
     	npcEntity.playAnimation("idle", 1.5f, LOOP, 0);
     	
+    	//npc 
+    	protClient.askForNPC();
    		//update the vertical position of the objects acc. to the terrain ***FILL IN THE INTEGER_TYPE VALUE FOR TYPE OF OBJECT YOU WANT TO UPDATE 1:npc, 2:spaceship, 3:ore, 4:crystal, 5:rock
    		updateObjectVerticalPosition(npcNode, 1);
     	  
         //spaceship----
-		shipObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("shipNode");
+		  shipObjectNode = (SceneNode) gameWorldObjectsNode.createChildNode("shipNode");
         Entity shipEntity = sm.createEntity("myShip", "spaceship.obj");
         shipEntity.setPrimitive(Primitive.TRIANGLES);
         shipNode = shipObjectNode.createChildSceneNode(shipEntity.getName() + "Node");
@@ -279,7 +286,6 @@ public class BeantasticGame extends VariableFrameRateGame {
         
    		//update the vertical position of the objects acc. to the terrain ***FILL IN THE INTEGER_TYPE VALUE FOR TYPE OF OBJECT YOU WANT TO UPDATE 1:npc, 2:spaceship, 3:ore, 4:crystal, 5:rock
    		updateObjectVerticalPosition(shipNode, 2);
-   		
         TextureManager shipTM = eng.getTextureManager();
         //change cube.png is spaceship texture
         Texture shipA = shipTM.getAssetByPath("cube.png");
@@ -288,6 +294,15 @@ public class BeantasticGame extends VariableFrameRateGame {
         shipS.setTexture(shipA);
         shipEntity.setRenderState(shipS);
         
+        //Script
+        ScriptEngineManager factory = new ScriptEngineManager();
+      	java.util.List<ScriptEngineFactory> list = factory.getEngineFactories();
+      	jsEngine = factory.getEngineByName("js");
+      	File scriptFile = new File("limit.js");
+        //this.executeScript(jsEngine, scriptFile);
+        this.runScript(scriptFile);
+       
+     
         //Setting ores objects for the game world
         for(int i = 0; i < maxOre; i++) {
         
@@ -297,7 +312,8 @@ public class BeantasticGame extends VariableFrameRateGame {
 	   		oreEntity.setPrimitive(Primitive.TRIANGLES); 
 	   		tempOreNode = tempOreObjectNode.createChildSceneNode(oreEntity.getName() + "Node");
 	   		tempOreNode.attachObject(oreEntity);
-	   		tempOreNode.setLocalScale(0.05f, 0.05f, 0.05f); 
+	   		tempOreNode.setLocalScale(0.5f, 0.5f, 0.5f); 
+            tempOreNode.translate(5,6,5);
 	   		tempOreNode.setLocalPosition(randomNumber.nextInt(100)-50, -.6f, randomNumber.nextInt(100)-50);			//Set random position
 	   		
 	   		//Setting the rotation controller
@@ -308,12 +324,10 @@ public class BeantasticGame extends VariableFrameRateGame {
 	   		//Filling the respective arrays
 	   		oreObjectList.add(tempOreObjectNode);
 	   		oreNodeList.add(tempOreNode);
-	   		
 	   		//update the vertical position of the objects acc. to the terrain ***FILL IN THE INTEGER_TYPE VALUE FOR TYPE OF OBJECT YOU WANT TO UPDATE 1:npc, 2:spaceship, 3:ore, 4:crystal, 5:rock
-	   		updateObjectVerticalPosition(tempOreNode, 3);
+	   		updateObjectVerticalPosition(tempOreNode, 3);																																												
         	
         }
-        
         
         //Setting crystal objects for the game world
         for(int i = 0; i < maxCrystal; i++) {
@@ -330,9 +344,8 @@ public class BeantasticGame extends VariableFrameRateGame {
 	   		//Filling the respective arrays
 	   		crystalObjectList.add(tempCrystalObjectNode);
 	   		crystalNodeList.add(tempCrystalNode);
-	   		
-	   		//update the vertical position of the objects acc. to the terrain ***FILL IN THE INTEGER_TYPE VALUE FOR TYPE OF OBJECT YOU WANT TO UPDATE 1:npc, 2:spaceship, 3:ore, 4:crystal, 5:rock
-	   		updateObjectVerticalPosition(tempCrystalNode, 4);
+			//update the vertical position of the objects acc. to the terrain ***FILL IN THE INTEGER_TYPE VALUE FOR TYPE OF OBJECT YOU WANT TO UPDATE 1:npc, 2:spaceship, 3:ore, 4:crystal, 5:rock
+	   		updateObjectVerticalPosition(tempCrystalNode, 4);																																										
         	
         }
         
@@ -346,15 +359,19 @@ public class BeantasticGame extends VariableFrameRateGame {
 	   		rockEntity.setPrimitive(Primitive.TRIANGLES); 
 	   		tempRockNode = tempRockObjectNode.createChildSceneNode(rockEntity.getName() + "Node");
 	   		tempRockNode.attachObject(rockEntity);
+												
 	   		if(smallCounter <= 25 && smallCounter + mediumCounter + largeCounter != 75) {
 	   			
 	   			tempRockNode.setLocalScale(0.08f, 0.08f, 0.08f); 
+											   
 	   			smallCounter++;
 	   			
 	   		}
 	   		else if(mediumCounter <= 25 && smallCounter + mediumCounter + largeCounter != 75) {
 	   			
 	   			tempRockNode.setLocalScale( 0.1f, 0.1f, 0.1f);
+												  
+
 	   			mediumCounter++;
 	   			
 	   		}
@@ -398,7 +415,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 		planetEntity.setRenderState(statePlanet);
 		
 		SceneNode planetChildNode = planetNode.createChildSceneNode(planetEntity.getName() + "Node");
-		planetChildNode.setLocalPosition(500f,125f, -225f);
+		planetChildNode.setLocalPosition(500f, 125f, -225f);
 		planetChildNode.setLocalScale(80f, 80f, 80f);
 		planetChildNode.attachObject(planetEntity);
 
@@ -451,17 +468,12 @@ public class BeantasticGame extends VariableFrameRateGame {
 		sb.setTexture(top, SkyBox.Face.TOP);        
 		sb.setTexture(bottom, SkyBox.Face.BOTTOM);        
 		sm.setActiveSkyBox(sb);
-				
-		//TESTING professor's script
-		//Prepare script engine
-		ScriptEngineManager factory = new ScriptEngineManager();
-		java.util.List<ScriptEngineFactory> list = factory.getEngineFactories();
-		jsEngine = factory.getEngineByName("js");
 		
 		//pressing SPACE light CHANGES TEST
 		scriptFile = new File("UpdateLightColor.js");
-		
-		this.runScript(scriptFile);
+
+	
+		//this.runScript(scriptFile);
 		im = new GenericInputManager();
 		String kbName = im.getKeyboardName();
 		//colorAction = new ColorAction(sm);
@@ -471,9 +483,8 @@ public class BeantasticGame extends VariableFrameRateGame {
 		setupOrbitCameras(eng,sm);
         setupInputs(sm);																								//Calling the function to setup the inputs
         initAudio(sm);
-        
+
     }
-	
 	//*****end of setting up the windows, cameras, scenes, objects, textures for the game*****
 	
     
@@ -492,27 +503,51 @@ public class BeantasticGame extends VariableFrameRateGame {
     
     private void createRagePhysicsWorld() {
 		// TODO Auto-generated method stub
-		 float mass = 1.0f;
-		 float up[] = {0,1,0};
-		 double[] temptf; 
+		 float mass = 10.0f;
+		 float massS = 0.1f;
+		 float massR = 5f;
+		 float radius = 1.5f;
+		 float h = 2.0f;
+		 //hitboxes around the object
+		 float up[] = {0f,1f,0f};
+		 float s[]= {2f, 2f, 2f};
+		 float r[]= {0.2f, 8f, 0.2f};
+		 double[] temptf, temptf2; 
 		 
+		 //meteor
 		 temptf = toDoubleArray(ball1Node.getLocalTransform().toFloatArray());
-		 ball1PhysObj = physicsEng.addSphereObject(physicsEng.nextUID(),mass, temptf, 2.0f);
-		 
-		 ball1PhysObj.setBounciness(1f);
+		 //ball1PhysObj = physicsEng.addSphereObject(physicsEng.nextUID(),mass, temptf, 2.0f);
+		 ball1PhysObj = physicsEng.addCapsuleObject(physicsEng.nextUID(), mass, temptf, radius, h);
+		 ball1PhysObj.setBounciness(.01f);
+		 ball1PhysObj.applyTorque(0, -2, 0);
+		 //ball1PhysObj.setFriction(1);
 		 ball1Node.setPhysicsObject(ball1PhysObj);
 		 
-		 //PLAYER NOT WORKING
-		 /*temptf = toDoubleArray(playerNode.getLocalTransform().toFloatArray());
-		 ball2PhysObj = physicsEng.addSphereObject(physicsEng.nextUID(),mass, temptf, 2.0f);
+		 //ship
+		 temptf2 = toDoubleArray(shipNode.getLocalTransform().toFloatArray());
+		 //ball2PhysObj = physicsEng.addSphereObject(physicsEng.nextUID(),massS, temptf2, 2.0f);
+		 ball2PhysObj = physicsEng.addBoxObject(physicsEng.nextUID(), massS, temptf2, s);
+		 ball2PhysObj.setBounciness(.01f);
+		 shipNode.setPhysicsObject(ball2PhysObj);
 		 
-		 //ball2PhysObj.setBounciness(.01f);
-		 //ball2PhysObj.setFriction(1f);
-		 playerNode.setPhysicsObject(ball2PhysObj);
-		 */
+		 /*
+		 temptf = toDoubleArray(rockNodeList.set(maxRocks, rockNode).getLocalTransform().toFloatArray());
+		 rockPhysObj = physicsEng.addBoxObject(physicsEng.nextUID(), massR, temptf2, r);
+		 rockPhysObj.setBounciness(0.01f);
+		 rockPhysObj.applyTorque(0, -2, 0);*/
+		 
+		/* temptf = toDoubleArray(((Node) rockNodeList).getLocalTransform().toFloatArray());
+		 //ball1PhysObj = physicsEng.addSphereObject(physicsEng.nextUID(),mass, temptf, 2.0f);
+		 rockPhysObj = physicsEng.addCapsuleObject(physicsEng.nextUID(), mass, temptf, radius, h);
+		 rockPhysObj.setBounciness(.01f);
+		 rockPhysObj.applyTorque(0, -2, 0);
+		 //ball1PhysObj.setFriction(1);
+		 ((Node) rockNodeList).setPhysicsObject(rockPhysObj);*/
+		 
 		 temptf = toDoubleArray(groundNode.getLocalTransform().toFloatArray());
-		 gndPlaneP = physicsEng.addStaticPlaneObject(physicsEng.nextUID(),temptf, up, 0.0f);
-		 gndPlaneP.setBounciness(1f);
+		 gndPlaneP = physicsEng.addStaticPlaneObject(physicsEng.nextUID(),temptf, up, 0.35f);
+		 gndPlaneP.setBounciness(.01f);
+		 gndPlaneP.setFriction(5f);
 		 groundNode.scale(3f, .05f, 3f);
 		 groundNode.setLocalPosition(0, -7, -2);
 		 groundNode.setPhysicsObject(gndPlaneP);
@@ -591,11 +626,11 @@ public class BeantasticGame extends VariableFrameRateGame {
     	//Initialization action gamepad
     	//"MoveForward-sAction.java " is not used
     	moveForwardAction = new MoveForwardAction(playerNode, protClient, this, true);  
-        moveBackwardAction = new MoveBackwardAction(playerNode, this);						
+    	moveBackwardAction = new MoveBackwardAction(playerNode, this);						
         moveLeftAction = new MoveLeftAction(playerNode);								
         moveRightAction = new MoveRightAction(playerNode);	
-        rotateRightA = new RotateRightAction(playerNode, camera);
-        rotateLeftA = new RotateLeftAction(playerNode, camera);
+        rotateRightA = new RotateRightAction(playerNode, protClient, camera);
+        rotateLeftA = new RotateLeftAction(playerNode, protClient, camera);
         rotateAction = new RotateAction(this);
         moveDirectionAction = new MoveDirectionAction(playerNode, this);
         moveUpDownAction = new MoveUpDownAction(playerNode, this);
@@ -631,7 +666,7 @@ public class BeantasticGame extends VariableFrameRateGame {
         //im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.D, moveLeftAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         //im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.A, moveRightAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.W, moveForwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
-        im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.S, moveBackwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
+        //im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.S, moveBackwardAction, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.A, rotateLeftA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         im.associateAction(kbName, net.java.games.input.Component.Identifier.Key.D, rotateRightA, InputManager.INPUT_ACTION_TYPE.REPEAT_WHILE_DOWN);
         
@@ -671,67 +706,88 @@ public class BeantasticGame extends VariableFrameRateGame {
     //Function to process networking
     protected void processNetworking(float elapsTime) {
     	
-    	if(protClient != null) 
+    	if(protClient != null) { 
     		protClient.processPackets();
-    	
+    	}
     	//Remove ghost avatars for players who have left the game
     	Iterator<UUID> it = gameObjectsToRemove.iterator();
     	
-    	while(it.hasNext()) 
+    	while(it.hasNext()) { 
     		sm.destroySceneNode(it.next().toString());
-    	
+    	}
     	gameObjectsToRemove.clear();
     	
     }
 
     //Function to check if the client is connected or not
 	public void setIsConnected(boolean b) {
-		// TODO Auto-generated method stub
 		this.isClientConnected = b;
 		
 	}
-
 	//Function to add the ghost avatar of the other player
 	public void addGhostAvatarToGameWorldnew(GhostAvatar avatar, Vector3 ghostPosition) throws IOException{
-		// TODO Auto-generated method stub
 		
 		if(avatar!=null) {
 			
-			Entity ghostE = sm.createEntity("ghostN", "dolphinHighPoly.obj");
-			ghostE.setPrimitive(Primitive.TRIANGLES);
+			SkeletalEntity ghostSE = getEngine().getSceneManager().createSkeletalEntity("ghost", "astroRig.rkm", "astro.rks");
+			ghostSE.setPrimitive(Primitive.TRIANGLES);
 			SceneNode ghostN = getEngine().getSceneManager().getRootSceneNode().createChildSceneNode(avatar.getID().toString());
-			ghostN.attachObject(ghostE);
+			//EDDIT
+	        //ghostN = avatar.getGhostN().createChildSceneNode(ghostSE.getName() + "Node");
+	        
+			ghostN.attachObject(ghostSE);
 			ghostN.setLocalPosition(ghostPosition);
+			ghostN.scale(.06f, .06f, .06f);
 			avatar.setNode(ghostN);
-			avatar.setEntity(ghostE);
+			avatar.setSE(ghostSE);
 			avatar.setPosition(ghostPosition.x(), ghostPosition.y(), ghostPosition.z());
+			System.out.println("ghost added " + ghostPosition);
 			
+			TextureManager tmd1 = getEngine().getTextureManager();
+	        Texture assetd1 = tmd1.getAssetByPath("astroTex1.png");
+	        RenderSystem rsd1 = getEngine().getSceneManager().getRenderSystem();
+	        TextureState stated1 =  (TextureState) rsd1.createRenderState(RenderState.Type.TEXTURE);
+	        stated1.setTexture(assetd1);
+	        ghostSE.setRenderState(stated1);
+	        ghostSE.loadAnimation("walk", "walk2.rka");
+	        ghostCheckN = true;
+	        //EDIT Vertical position
+
 		}
 		
 	}
 	
 	public void addGhostAvatarToGameWorldold(GhostAvatar avatar, Vector3 ghostPosition) throws IOException{
-		// TODO Auto-generated method stub
-		
 		if(avatar!=null) {
-			
-			Entity ghostE = sm.createEntity("ghost0", "dolphinHighPoly.obj");
-			ghostE.setPrimitive(Primitive.TRIANGLES);
+			SkeletalEntity ghostSE = getEngine().getSceneManager().createSkeletalEntity("ghost", "astroRig.rkm", "astro.rks");
+			//ghostE.setPrimitive(Primitive.TRIANGLES);
 			SceneNode ghostN = getEngine().getSceneManager().getRootSceneNode().createChildSceneNode(avatar.getID().toString());
-			ghostN.attachObject(ghostE);
+			//EDDIT
+	        //ghostN = avatar.getGhostN().createChildSceneNode(ghostSE.getName() + "Node");
+
+			ghostN.attachObject(ghostSE);
 			ghostN.setLocalPosition(ghostPosition);
+			ghostN.scale(.06f, .06f, .06f);
 			avatar.setNode(ghostN);
-			avatar.setEntity(ghostE);
+			avatar.setSE(ghostSE);
 			avatar.setPosition(ghostPosition.x(), ghostPosition.y(), ghostPosition.z());
+			System.out.println("ghost added " + ghostPosition);
 			
+			TextureManager tmd1 = getEngine().getTextureManager();
+	        Texture assetd1 = tmd1.getAssetByPath("astroTex1.png");
+	        RenderSystem rsd1 = getEngine().getSceneManager().getRenderSystem();
+	        TextureState stated1 =  (TextureState) rsd1.createRenderState(RenderState.Type.TEXTURE);
+	        stated1.setTexture(assetd1);
+	        ghostSE.setRenderState(stated1);
+	        ghostSE.loadAnimation("walk", "walk2.rka");
+	        ghostCheckN = true;
+	        
 		}
 		
 	}
 	
 	//Function to remove Ghost avatar
 	public void removeGhostAvatarFromGameWorld(GhostAvatar avatar) {
-		// TODO Auto-generated method stub
-		
 		if(avatar!=null)
 			gameObjectsToRemove.add((UUID)avatar.getID());
 		
@@ -833,7 +889,13 @@ public class BeantasticGame extends VariableFrameRateGame {
     	playerEntity.playAnimation("walk", 0.75f, LOOP, 0);
     	
     }
-    
+    private void doTheWalk2() {
+    	
+    	SkeletalEntity ghostSE = (SkeletalEntity) getEngine().getSceneManager().getEntity("ghost");
+    	//ghostSE.stopAnimation();
+    	ghostSE.playAnimation("walk", 0.75f, LOOP, 0);
+    	
+    }
     private void Idle() {
     	
     	SkeletalEntity playerEntity = (SkeletalEntity) getEngine().getSceneManager().getEntity("myPlayer");
@@ -860,8 +922,10 @@ public class BeantasticGame extends VariableFrameRateGame {
 		elapsTimeStr = Integer.toString(elapsTimeSec);
 		im.update(elapsTime);	
 		playerController.updateCameraPosition();
-		processNetworking(elapsTime);
-		
+		dispStr = "Player time = "+elapsTimeStr+"  Ores Collected = "+ oresCount + "/" + maxOre + " " + winner;
+
+		rs.setHUD(dispStr, 15, 15);
+
 		//physics
 		if(running) {
 			
@@ -882,15 +946,29 @@ public class BeantasticGame extends VariableFrameRateGame {
 		}
 		
 		//animations----
+		if(ghostCheckN) {
+    		SkeletalEntity ghostSE = (SkeletalEntity) engine.getSceneManager().getEntity("ghost");
+    		ghostSE.update();
+    		if(walkG2) {
+    			setWalkFalse2();
+            }
+            else {
+            	doTheWalk2();
+            }
+    	}
+		
 		SkeletalEntity playerEntity = (SkeletalEntity) engine.getSceneManager().getEntity("myPlayer");
     	playerEntity.update();
     	SkeletalEntity npcEntity = (SkeletalEntity) engine.getSceneManager().getEntity("npc");
     	npcEntity.update();
-		if(!walkB)
-    		doTheWalk();
-        else
-        	setWalkFalse();
+		if(walkB) 
+	        setWalkFalse();
+	    else 
+	    	doTheWalk();
 		
+    	
+        
+        
 		//Updating the sound variables with each gameEngine cycle
 		SceneManager sm = engine.getSceneManager();
 		SceneNode playerNode = sm.getSceneNode("myPlayerNode"), shipNode = sm.getSceneNode("myShipNode");		
@@ -901,16 +979,59 @@ public class BeantasticGame extends VariableFrameRateGame {
 		
 		//Update the input manager with elapsed time
 		im.update(elapsTime);	
-		
+		processNetworking(elapsTime);
+
 		//Printing out the position of the player in the world to the console
-		System.out.println(playerNode.getWorldPosition().toString());
+		//Debug terrain
+		//System.out.println(playerNode.getWorldPosition().toString());
+		
+		
+		//collision
+		SceneNode player = getEngine().getSceneManager().getSceneNode("myPlayerNode");
+		for(int i =0; i<= oreNodeList.size()-1; i++)
+		{
+			SceneNode target = oreNodeList.get(i);
+			if(colDetection(player, target)< 1f)
+			{
+				oreNodeList.remove(i);
+				player.attachChild(target);
+				oresCount++;
+				//System.out.println("cyrtal collected" + oresCount);
+			}
+		}
+		if(oreNodeList.size() < 1)
+		{
+			winner = "Winner";
+			//System.out.println("Winner");
+		}
+	}
+    //collision detection
+    private float colDetection(SceneNode s, SceneNode d){
+		float sX = s.getLocalPosition().x(),
+				  sY = s.getLocalPosition().y(),
+			      sZ = s.getLocalPosition().z();
+		float mX = d.getLocalPosition().x(),
+			      mY = d.getLocalPosition().y(),
+				  mZ = d.getLocalPosition().z();
+			
+		double a, b, c;
+		a = Math.pow(sX-mX, 2);
+		b = Math.pow(sY-mY, 2);
+		c = Math.pow(sZ-mZ, 2);
+			
+		double result;
+		result = Math.sqrt((double)a + b + c);
+		return (float)result;
 		
 	}
+
     
-    //Function to update the player height according to the terrain----
+    
+        //Function to update the player height according to the terrain----
 	public void updateVerticalPosition() {
 		
 		//Getting and setting the info. variables
+
 		SceneNode playerNode = this.getEngine().getSceneManager().getSceneNode("myPlayerNode");
 		SceneNode tessNode = this.getEngine().getSceneManager().getSceneNode("TessN");
 		Tessellation tessEntity = ((Tessellation)tessNode.getAttachedObject("tessE"));
@@ -924,6 +1045,7 @@ public class BeantasticGame extends VariableFrameRateGame {
 	
     //Function to update the object height according to the terrain----
 	public void updateObjectVerticalPosition(SceneNode tempNode, int type) {
+																																											  
 		
 		//int types  ==>  1:npc, 2:spaceship, 3:ore, 4:crystal, 5:rock
 		float delta = 0.5f;
@@ -1044,8 +1166,153 @@ public class BeantasticGame extends VariableFrameRateGame {
     	audioManager.getEar().setOrientation(avDir, Vector3f.createFrom(0,1,0));
     	
     }
-    
+
+	public Matrix3 getPlayerOrientation() {
+		// TODO Auto-generated method stub
+		return playerNode.getLocalRotation();
+	}
+
+	public void moveNodeF(UUID ghostID, Vector3 ghostPosition) {
+		// TODO Auto-generated method stub
+		//SceneNode ghostN = this.getEngine().getSceneManager().getSceneNode("ghostNode");
+
+		Vector<GhostAvatar> ghostAvatars = protClient.getCollection();
+		ghostAvatars.get(0).getGhostN().moveForward(.05f);
+		setWalkTrue2();
+		/*if(ghostCheckN) {
+			updateVertGhostNew(ghostID, ghostPosition);
+		}
+		updateVertGhostOld(ghostID, ghostPosition);*/
+		//SceneNode ghostN = ghostAvatars.get(0).getGhostN();
+		
+		
+	}
+	public void setWalkTrue2() {
+		walkG2 = true;
+	}
+	public void setWalkFalse2() {
+		walkG2 = false;
+	}
+	public void updateVertGhostNew(UUID ghostID, Vector3 ghostPosition) {
+		// TODO Auto-generated method stub  
+		//SceneNode ghostN = this.getEngine().getSceneManager().getSceneNode("ghostNode");
+		SceneNode ghostN = getEngine().getSceneManager().getRootSceneNode().createChildSceneNode(ghostID.toString());
+
+		SceneNode tessN = this.getEngine().getSceneManager().getSceneNode("TessN");
+		Tessellation tessE = ((Tessellation) tessN.getAttachedObject("tessE"));
+		
+		Vector3 worldAvatarPositionGhost = ghostN.getWorldPosition();
+		Vector3 localAvatarPositionGhost = ghostN.getLocalPosition();
+		
+		float terrHeight = tessE.getWorldHeight(worldAvatarPositionGhost.x()+.1f, worldAvatarPositionGhost.z()+.1f);
+		
+		Vector3 newAvatarPositionGhost = (Vector3)Vector3f.createFrom(localAvatarPositionGhost.x(), terrHeight+.5f, localAvatarPositionGhost.z());
+		ghostN.setLocalPosition(newAvatarPositionGhost);
+        protClient.sendMoveMessage(ghostN.getWorldPosition(), "Vert");
+
+		
+	}
+
+	private void updateVertGhostOld(UUID ghostID, Vector3 ghostPosition) {
+		// TODO Auto-generated method stub
+		//SceneNode ghostN = this.getEngine().getSceneManager().getSceneNode("ghostNode");
+		SceneNode ghostN = getEngine().getSceneManager().getRootSceneNode().createChildSceneNode(ghostID.toString());
+
+		SceneNode tessN = this.getEngine().getSceneManager().getSceneNode("TessN");
+		Tessellation tessE = ((Tessellation) tessN.getAttachedObject("tessE"));
+		
+		Vector3 worldAvatarPositionGhost = ghostN.getWorldPosition();
+		Vector3 localAvatarPositionGhost = ghostN.getLocalPosition();
+		
+		float terrHeight = tessE.getWorldHeight(worldAvatarPositionGhost.x()+.1f, worldAvatarPositionGhost.z()+.1f);
+		
+		Vector3 newAvatarPositionGhost = (Vector3)Vector3f.createFrom(localAvatarPositionGhost.x(), terrHeight+.5f, localAvatarPositionGhost.z());
+		ghostN.setLocalPosition(newAvatarPositionGhost);
+        protClient.sendMoveMessage(ghostN.getWorldPosition(), "Vert");
+
+	}
+    public void addGhostNPCGameWorld(GhostNPC npc, int id) throws IOException{
+    	if(npc!=null) {
+    		Entity npcE = getEngine().getSceneManager().createEntity("npc" +id, "astro.obj");
+    		//npcE.setPrimitive(Primitive.TRIANGLES);
+    		SceneNode npcN = getEngine().getSceneManager().getRootSceneNode().createChildSceneNode("npcNode1");
+    		npcN.attachObject(npcE);
+    		
+    		npcN.setLocalPosition(2.5f, -0.3f, 0);
+    		
+    		TextureManager tmd1 = getEngine().getTextureManager();
+	        Texture assetd1 = tmd1.getAssetByPath("astroTex2.png");
+	        RenderSystem rsd1 = getEngine().getSceneManager().getRenderSystem();
+	        TextureState stated1 =  (TextureState) rsd1.createRenderState(RenderState.Type.TEXTURE);
+	        stated1.setTexture(assetd1);
+	        npcE.setRenderState(stated1);
+    		
+    		System.out.println("npc added");
+    		
+    	}
+    }
 	//*****end of sound Functionalities*****
-    
+
+	public void rotateLN(UUID ghostID, Vector3 ghostPosition) {
+		// TODO Auto-generated method stub
+		Vector<GhostAvatar> ghostAvatars = protClient.getCollection();
+		Angle rotAmt1 = Degreef.createFrom(5f);
+		ghostAvatars.get(0).getGhostN().yaw(rotAmt1);
+	}
+
+	public void rotateRN(UUID ghostID, Vector3 ghostPosition) {
+		// TODO Auto-generated method stub
+		Vector<GhostAvatar> ghostAvatars = protClient.getCollection();
+		Angle rotAmt1 = Degreef.createFrom(-5f);
+		ghostAvatars.get(0).getGhostN().yaw(rotAmt1);
+	}
+
+	public void getSmall(NPC npc) {
+		if(npc!=null)
+		{
+			SceneNode npcN = getEngine().getSceneManager().getSceneNode("npcNode1");
+			npcN.setLocalScale(0.5f, 0.5f, 0.5f);
+		}
+	}
+
+	public void getBig(NPC npc) {
+		if(npc!=null)
+		{
+			SceneNode npcN = getEngine().getSceneManager().getSceneNode("npcNode1");
+			npcN.setLocalScale(3f, 3f, 3f);
+		}
+	}
+
+	public double getSize(NPC npc) {
+		if(npc!=null)
+		{
+			SceneNode npcN = getEngine().getSceneManager().getSceneNode("npcNode1");
+			double size = npcN.getLocalScale().x();
+			return size;
+		}else
+			return 0;
+	}
+	// Script
+	private void executeScript(ScriptEngine engine, String scriptFile2)
+	{
+		try
+		{
+			FileReader fileReader = new FileReader(scriptFile2);
+			engine.eval(fileReader);
+			fileReader.close();
+		}
+		catch(FileNotFoundException e1){
+			System.out.println(scriptFile2 + "not found" +e1);
+		}
+		catch(IOException e2){
+			System.out.println("IO problem with " + scriptFile2 + "not found" +e2);
+		}
+		catch(ScriptException e3){
+			System.out.println("ScriptException in " + scriptFile2 + "not found" +e3);
+		}
+		catch(NullPointerException e4){
+			System.out.println("Null pointer exception " +scriptFile2 + "not found" +e4);
+		}
+	}
 }
 
