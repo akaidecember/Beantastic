@@ -73,6 +73,10 @@ public class BeantasticGame extends VariableFrameRateGame {
     private static final String SKYBOX_NAME = "SkyBox";
     private boolean skyBoxVisible = true;
     
+    //score 
+    private int oresCount;
+    private String winner = "";
+    
 	//server variables---
 	private String serverAddress;
 	private int serverPort;
@@ -102,10 +106,7 @@ public class BeantasticGame extends VariableFrameRateGame {
     public Camera camera;
     public SceneNode playerNode, shipNode, npcNode;		
     public ArrayList<SceneNode> oreNodeList = new ArrayList<SceneNode>(), crystalNodeList = new ArrayList<SceneNode>(), rockNodeList = new ArrayList<SceneNode>();
-    
-    //score 
-    private int oresCount;
-    private String winner = "";
+    public Light plight2;
     
     //XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     //Debug variables for the game developer to make things easier
@@ -449,6 +450,16 @@ public class BeantasticGame extends VariableFrameRateGame {
         plightNode.attachObject(plight);
         playerEntity.getParentSceneNode().attachObject(plight);
         
+        // turn light on and off -- requirement
+        sm.getAmbientLight().setIntensity(new Color(0.7f, 0.7f, 0.7f));
+		plight2 = sm.createLight("testLamp2", Light.Type.POINT);
+		plight2.setAmbient(new Color(.3f, .4f, .4f));
+        plight2.setDiffuse(new Color(.7f, .7f, .7f));
+		plight2.setSpecular(new Color(.9f, 1.0f, .05f));
+        plight2.setRange(1.75f);
+        planetEntity.getParentSceneNode().attachObject(plight2);										//Attaching the planet to the sun
+           
+        
         //Setting up sky box   
         Configuration conf = eng.getConfiguration();
 		TextureManager tm= getEngine().getTextureManager();
@@ -605,6 +616,10 @@ public class BeantasticGame extends VariableFrameRateGame {
     	
     		case KeyEvent.VK_SPACE:System.out.println("Starting Physics!");
     			running = true;
+    			break;
+    			
+    		case KeyEvent.VK_L:System.out.println("Toggle the SUN !!!");
+    			plight2.setVisible(!plight2.isVisible());
     			break;
     			
     	} 
@@ -1082,6 +1097,8 @@ public class BeantasticGame extends VariableFrameRateGame {
 		objectNode.setLocalPosition(newObjectPosition);																								//Updating the object location location
 		
 	}
+	
+	
     
 	//*****end of update function*****
         
