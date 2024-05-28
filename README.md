@@ -69,6 +69,6 @@ If you encounter any issues while running the game, consider the following:
 
 ## Additional Information
 
-For more details on the RAGE gaming engine or to contribute to the project, please refer to the project's documentation or contact the development team.
+For more details on the RAGE gaming engine or to contribute to the project, please refer to the project's documentation or contact the dev.
 
 Enjoy playing Beantastic!
