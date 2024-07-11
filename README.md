@@ -4,6 +4,8 @@
 
 Beantastic is a game built using the RAGE gaming engine (RAGE Game Engine files are required to run that are not provided in this repo), featuring assets that are either self-created or provided by Prof. Gordon. This game offers both single-player and multiplayer modes, allowing you to enjoy it solo or with friends.
 
+![Beantastic Game](game.png)
+
 ## Getting Started
 
 ### Prerequisites
